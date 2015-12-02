@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace UnityStandardAssets._2D
 {
@@ -19,17 +20,54 @@ namespace UnityStandardAssets._2D
         private Animator m_Anim;            // Reference to the player's animator component.
         private Rigidbody2D m_Rigidbody2D;
         private bool m_FacingRight = true;  // For determining which way the player is currently facing.
+        private bool m_Jump;
+        //private Vector2 most_recent_ground_posiiton
+
+
+
+        // Custom fields
+        [SerializeField] private float climbing_max_speed = 2;
         private float slope_friction = 0.6f;
-        private float gravity_factor;
+        [HideInInspector] public float normal_gravity_factor;
+        [HideInInspector] public bool can_climb = false;  // If over a climbasble section, this is set to true
+        [HideInInspector] public bool is_climbing = false;
+
+        [HideInInspector] public float HP = 1;
+        [HideInInspector] public float stamina = 1;   // Stamina dictates if we can do stressful actions. Low stamina means no.
+        private float stamina_regen_per_second = 0.5f;  // How much stamina is regenerated per second
+        [HideInInspector] public float encumbrance = 0;   // How much weight we're carrying
+
+        // Drag these in from the UI
+        public Slider HP_slider;
+        public Slider stamina_slider;
+        public Slider weight_slider;
+
+        private float jump_stamina_cost = 0.7f;
+
 
         private void Awake()
         {
             // Setting up references.
             m_GroundCheck = transform.Find("GroundCheck");
             m_CeilingCheck = transform.Find("CeilingCheck");
-            m_Anim = GetComponent<Animator>();
+            //m_Anim = GetComponent<Animator>();
             m_Rigidbody2D = GetComponent<Rigidbody2D>();
-            gravity_factor = m_Rigidbody2D.gravityScale;
+            normal_gravity_factor = m_Rigidbody2D.gravityScale;
+
+            AdjustHP(0);
+            AdjustStamina(0);
+        }
+
+
+        private void Update()
+        {
+            AdjustStamina(Time.deltaTime * stamina_regen_per_second);
+
+            if (!m_Jump)
+            {
+                // Read the jump input in Update so button presses aren't missed.
+                m_Jump = Input.GetButtonDown("Jump");
+            }
         }
 
 
@@ -48,16 +86,24 @@ namespace UnityStandardAssets._2D
                     break;
                 }
             }
-            m_Anim.SetBool("Ground", m_Grounded);
+
+
+            // If this current frame is now grounded, and our previous one wasn't, then we were in the air and we just landed
+            // Check the velocity to see if this should cause damage
+
+
+            //m_Anim.SetBool("Ground", m_Grounded);
 
             // Set the vertical animation
-            m_Anim.SetFloat("vSpeed", m_Rigidbody2D.velocity.y);
+            ////m_Anim.SetFloat("vSpeed", m_Rigidbody2D.velocity.y);
 
             // Attempt vertical normalization
+            // To prevent player from sliding down slopes, turn off gravity if they are touching the ground
+            /*
             if (m_Grounded)
             {
-                m_Rigidbody2D.gravityScale = 0;
-                /*
+                //m_Rigidbody2D.gravityScale = 0.5f;
+                
                 Debug.Log("A");
                 RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 2f, m_WhatIsGround);
                 if (hit.collider != null)
@@ -78,65 +124,124 @@ namespace UnityStandardAssets._2D
                 }
                 */
 
-            }
-            else
-                m_Rigidbody2D.gravityScale = gravity_factor;
+            //}
+            //else
+            //    m_Rigidbody2D.gravityScale = normal_gravity_factor;
+
+            // Read the inputs.
+            bool climb = Input.GetKey(KeyCode.LeftShift);
+
+            if (climb)
+                this.StartClimbing();
+
+            float h = Input.GetAxis("Horizontal");
+            float v = Input.GetAxis("Vertical");
+
+            // Pass all parameters to the character control script.
+            this.Move(h, v, climb, m_Jump);
+            m_Jump = false;
         }
 
 
-        public void Move(float move, bool crouch, bool jump)
+        // Main method for resolving user input
+        public void Move(float horizontal_input, float vertical_input, bool climbing, bool jump)
         {
             // If crouching, check to see if the character can stand up
-            if (!crouch && m_Anim.GetBool("Crouch"))
+            /*if (!crouch) // && m_Anim.GetBool("Crouch"))
             {
                 // If the character has a ceiling preventing them from standing up, keep them crouching
                 if (Physics2D.OverlapCircle(m_CeilingCheck.position, k_CeilingRadius, m_WhatIsGround))
                 {
                     crouch = true;
                 }
-            }
+            }*/
 
             // Set whether or not the character is crouching in the animator
-            m_Anim.SetBool("Crouch", crouch);
+            //m_Anim.SetBool("Crouch", crouch);
 
-            //only control the player if grounded or airControl is turned on
-            if (m_Grounded || m_AirControl)
+            // Are we climbing?
+            if (climbing & is_climbing)
             {
-                // Reduce the speed if crouching by the crouchSpeed multiplier
-                move = (crouch ? move*m_CrouchSpeed : move);
-
-                // The Speed animator parameter is set to the absolute value of the horizontal input.
-                m_Anim.SetFloat("Speed", Mathf.Abs(move));
-
-                // Move the character
-                if (!m_Grounded || true)    // Keep Y velocity if we're not grounded
-                    m_Rigidbody2D.velocity = new Vector2(move*m_MaxSpeed, m_Rigidbody2D.velocity.y);
-                else if (!jump) // On the ground, should not be sliding up or down
+                // Climbing sideways on wall
+                m_Rigidbody2D.velocity = new Vector2(horizontal_input * climbing_max_speed, vertical_input * climbing_max_speed);
+            }
+            // Are we walking?
+            else
+            {
+                // Normal ground movement
+                // Only control the player if grounded or airControl is turned on
+                if (m_Grounded || m_AirControl)
                 {
-                    m_Rigidbody2D.velocity = new Vector2(move * m_MaxSpeed, 0);
-                }
+                    // Reduce the speed if crouching by the crouchSpeed multiplier
+                    //horizontal_input = (crouch ? horizontal_input * m_CrouchSpeed : horizontal_input);
 
-                // If the input is moving the player right and the player is facing left...
-                if (move > 0 && !m_FacingRight)
-                {
-                    // ... flip the player.
-                    Flip();
-                }
+                    // The Speed animator parameter is set to the absolute value of the horizontal input.
+                    //m_Anim.SetFloat("Speed", Mathf.Abs(move));
+
+                    // Move the character
+                    m_Rigidbody2D.velocity = new Vector2(horizontal_input * m_MaxSpeed, m_Rigidbody2D.velocity.y);
+
+                    // If the input is moving the player right and the player is facing left...
+                    if (horizontal_input > 0 && !m_FacingRight)
+                    {
+                        // ... flip the player.
+                        Flip();
+                    }
                     // Otherwise if the input is moving the player left and the player is facing right...
-                else if (move < 0 && m_FacingRight)
+                    else if (horizontal_input < 0 && m_FacingRight)
+                    {
+                        // ... flip the player.
+                        Flip();
+                    }
+                }
+                // If the player should jump...
+                if (m_Grounded && jump && stamina >= jump_stamina_cost) // && m_Anim.GetBool("Ground"))
                 {
-                    // ... flip the player.
-                    Flip();
+                    AdjustStamina(-jump_stamina_cost);
+
+                    // Add a vertical force to the player.
+                    m_Grounded = false;
+                    //m_Anim.SetBool("Ground", false);
+                    m_Rigidbody2D.AddForce(new Vector2(0f, m_JumpForce));
                 }
             }
-            // If the player should jump...
-            if (m_Grounded && jump && m_Anim.GetBool("Ground"))
+        }
+
+
+        // Stamina is always between 0 and 1
+        public void AdjustStamina(float amount)
+        {
+            stamina = Mathf.Clamp(stamina + amount, 0, 1);
+            stamina_slider.value = stamina;
+        }
+        // HP is <= 1. If <= 0, the player is dead
+        public void AdjustHP(float amount)
+        {
+            HP = Mathf.Clamp(stamina + amount, 0, 1);
+            HP_slider.value = HP;
+
+            if (HP <= 0)
             {
-                // Add a vertical force to the player.
-                m_Grounded = false;
-                m_Anim.SetBool("Ground", false);
-                m_Rigidbody2D.AddForce(new Vector2(0f, m_JumpForce));
+                Die();
             }
+        }
+        public void Die()
+        {
+            Debug.Log("Player died");
+        }
+
+        public void StartClimbing()
+        {
+            if (can_climb)
+            {
+                is_climbing = true;
+                this.m_Rigidbody2D.gravityScale = 0;
+            }
+        }
+        public void StopClimbing()
+        {
+            is_climbing = false;
+            this.m_Rigidbody2D.gravityScale = normal_gravity_factor;
         }
 
 
@@ -146,9 +251,9 @@ namespace UnityStandardAssets._2D
             m_FacingRight = !m_FacingRight;
 
             // Multiply the player's x local scale by -1.
-            Vector3 theScale = transform.localScale;
-            theScale.x *= -1;
-            transform.localScale = theScale;
+            Vector3 scale = transform.localScale;
+            scale.x *= -1;
+            transform.localScale = scale;
         }
     }
 }

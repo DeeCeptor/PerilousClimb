@@ -10,7 +10,6 @@ public class Slope : MonoBehaviour
     {
         if (other.gameObject.tag == "Player")
         {
-            Debug.Log("A");
             other.gameObject.GetComponent<Rigidbody2D>().gravityScale = 0;
         }
     }

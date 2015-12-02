@@ -44,6 +44,11 @@ namespace UnityStandardAssets._2D
 
         private float jump_stamina_cost = 0.7f;
 
+        bool previously_grounded = false;
+        Vector2 previous_velocity = Vector2.zero;
+
+        float fall_damage_threshold = -15f;     // Anything more (> -15) does no damage when falling
+
 
         private void Awake()
         {
@@ -73,6 +78,8 @@ namespace UnityStandardAssets._2D
 
         private void FixedUpdate()
         {
+            previously_grounded = m_Grounded;
+            previous_velocity = m_Rigidbody2D.velocity;
             m_Grounded = false;
 
             // The player is grounded if a circlecast to the groundcheck position hits anything designated as ground
@@ -90,7 +97,21 @@ namespace UnityStandardAssets._2D
 
             // If this current frame is now grounded, and our previous one wasn't, then we were in the air and we just landed
             // Check the velocity to see if this should cause damage
-
+            // -Y velocity means we're heading downwards
+            if (!previously_grounded && m_Grounded && previous_velocity.y < 0)
+            {
+                // An average jump will have you get ~-9 Y velocity
+                // Deal damage if the value is over -15
+                // Are we going fast enough to get hurt?
+                if (previous_velocity.y < fall_damage_threshold)
+                {
+                    // Calculate how much damage we should take
+                    float velocity_over_threshold = Mathf.Abs(previous_velocity.y) - Mathf.Abs(fall_damage_threshold);
+                    float damage = -(velocity_over_threshold / 10);
+                    Debug.Log("Took damage: " + damage + " " + velocity_over_threshold);
+                    AdjustHP(damage);
+                }
+            }
 
             //m_Anim.SetBool("Ground", m_Grounded);
 

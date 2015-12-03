@@ -6,7 +6,7 @@ using UnityEngine;
 public class RopeGenerator : MonoBehaviour
 {
     private LineRenderer line;
-    private List<GameObject> joints;
+    public List<GameObject> joints;
     private int vertexCount;
     private float NTDistance;
     public GameObject emptyPrefab;
@@ -23,12 +23,12 @@ public class RopeGenerator : MonoBehaviour
         joints = new List<GameObject>();
         line = GetComponent<LineRenderer>();
         line.SetWidth(0.1f, 0.1f);  // 0.05f
-        //line.SetColors(Color.black, Color.blue);
-
+        line.SetColors(Color.black, Color.blue);
+        Vector3 dir = beginning.transform.position - end.transform.position;
 
         for (int i = 0; i < vertexCount; i++)
         {
-            joints.Add((GameObject)Instantiate(emptyPrefab, new Vector3(beginning.transform.position.x, beginning.transform.position.y, 0), Quaternion.identity));
+            joints.Add((GameObject)Instantiate(emptyPrefab, new Vector3(beginning.transform.position.x, beginning.transform.position.y, 0)-((dir/(float)vertexCount)*i), Quaternion.identity));
         }
 
         // Connect all the joints and and make their parents this object
@@ -36,13 +36,14 @@ public class RopeGenerator : MonoBehaviour
         {
             //joints[j].transform.parent = this.transform;
             joints[j].GetComponent<HingeJoint2D>().connectedBody = joints[j + 1].GetComponent<Rigidbody2D>();
+
         }
 
         // Disable joints on the end
         //joints[vertexCount - 1].GetComponent<HingeJoint2D>().enabled = false;
 
         // Throw the first one
-        //joints[vertexCount - 1].GetComponent<Rigidbody2D>().AddForce(new Vector2(500, 30000), ForceMode2D.Force);
+        
 
         // Set connections on ends
         // Where player is
@@ -54,12 +55,15 @@ public class RopeGenerator : MonoBehaviour
         jo.distance = 0.2f;*/
         HingeJoint2D jo = joints[0].AddComponent<HingeJoint2D>();
         jo.connectedBody = beginning.GetComponent<Rigidbody2D>();
-   
+        jo = joints[joints.Count-1].GetComponent<HingeJoint2D>();
+        jo.connectedBody = end.GetComponent<Rigidbody2D>();
+        joints.Add(end);
+        end.GetComponent<Rigidbody2D>().AddForce(new Vector2(10000, 10000), ForceMode2D.Force);
         /*
         joints[vertexCount - 1].GetComponent<HingeJoint2D>().connectedBody = end.GetComponent<Rigidbody2D>();
         joints[vertexCount - 1].GetComponent<HingeJoint2D>().anchor = Vector2.zero;
         joints[vertexCount - 1].GetComponent<HingeJoint2D>().connectedAnchor = Vector2.zero;*/
-        joints[vertexCount - 1].GetComponent<Rigidbody2D>().isKinematic = true;
+        //joints[vertexCount - 1].GetComponent<Rigidbody2D>().isKinematic = true;
     }
 
 

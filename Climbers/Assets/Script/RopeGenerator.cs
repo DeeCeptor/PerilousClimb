@@ -12,30 +12,44 @@ public class RopeGenerator : MonoBehaviour
     public GameObject emptyPrefab;
     public GameObject beginning;
     public GameObject end;
+    public Vector2 throwForce = new Vector3(1000,1000,0);
 
     //public Vector2 direction = (1, 0);
 
     void Start()
     {
-        //vertexCount = 50;
-        vertexCount = (((int)Vector2.Distance(beginning.transform.position, end.transform.position)) * 3) - 1;
+        
+        ThrowRope();
+    }
 
+    public void ThrowRope()
+    {
+        if (beginning == null || end == null)
+        {
+            beginning = gameObject;
+            end = gameObject;
+        }
         joints = new List<GameObject>();
         line = GetComponent<LineRenderer>();
+        vertexCount = 8;
+        // vertexCount = (((int)Vector2.Distance(beginning.transform.position, end.transform.position)) * 3) - 1;
+
         line.SetWidth(0.1f, 0.1f);  // 0.05f
         line.SetColors(Color.black, Color.blue);
         Vector3 dir = beginning.transform.position - end.transform.position;
 
         for (int i = 0; i < vertexCount; i++)
         {
-            joints.Add((GameObject)Instantiate(emptyPrefab, new Vector3(beginning.transform.position.x, beginning.transform.position.y, 0)-((dir/(float)vertexCount)*i), Quaternion.identity));
+            GameObject segment = ((GameObject)Instantiate(emptyPrefab, new Vector3(beginning.transform.position.x, beginning.transform.position.y, 0) - ((dir / (float)vertexCount) * i), Quaternion.identity));
+            joints.Add(segment);
+            segment.transform.parent = transform;
         }
 
         // Connect all the joints and and make their parents this object
         for (int j = 0; j < joints.Count - 1; j++)
         {
             //joints[j].transform.parent = this.transform;
-            joints[j].GetComponent<HingeJoint2D>().connectedBody = joints[j + 1].GetComponent<Rigidbody2D>();
+        joints[j].GetComponent<HingeJoint2D>().connectedBody = joints[j + 1].GetComponent<Rigidbody2D>();
 
         }
 
@@ -43,7 +57,7 @@ public class RopeGenerator : MonoBehaviour
         //joints[vertexCount - 1].GetComponent<HingeJoint2D>().enabled = false;
 
         // Throw the first one
-        
+
 
         // Set connections on ends
         // Where player is
@@ -55,10 +69,12 @@ public class RopeGenerator : MonoBehaviour
         jo.distance = 0.2f;*/
         HingeJoint2D jo = joints[0].AddComponent<HingeJoint2D>();
         jo.connectedBody = beginning.GetComponent<Rigidbody2D>();
-        jo = joints[joints.Count-1].GetComponent<HingeJoint2D>();
+        jo = joints[joints.Count - 1].GetComponent<HingeJoint2D>();
+        jo.anchor = new Vector2(0, 0);
         jo.connectedBody = end.GetComponent<Rigidbody2D>();
         joints.Add(end);
-        end.GetComponent<Rigidbody2D>().AddForce(new Vector2(10000, 10000), ForceMode2D.Force);
+        end.GetComponent<Rigidbody2D>().AddForce(throwForce, ForceMode2D.Force);
+        end.AddComponent<RopeAttachScript>();
         /*
         joints[vertexCount - 1].GetComponent<HingeJoint2D>().connectedBody = end.GetComponent<Rigidbody2D>();
         joints[vertexCount - 1].GetComponent<HingeJoint2D>().anchor = Vector2.zero;
@@ -69,10 +85,10 @@ public class RopeGenerator : MonoBehaviour
 
     void Update()
     {
-        line.SetVertexCount(joints.Count);
-        for (int i = 0; i < joints.Count; i++)
-        {
-            line.SetPosition(i, joints[i].transform.position);
-        }
+            line.SetVertexCount(joints.Count);
+            for (int i = 0; i < joints.Count; i++)
+            {
+                line.SetPosition(i, joints[i].transform.position);
+            }
     }
 }

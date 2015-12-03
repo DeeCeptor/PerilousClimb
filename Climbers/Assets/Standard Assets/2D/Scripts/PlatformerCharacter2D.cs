@@ -42,12 +42,14 @@ namespace UnityStandardAssets._2D
         public Slider stamina_slider;
         public Slider weight_slider;
 
-        private float jump_stamina_cost = 0.7f;
+        private float jump_stamina_cost = 0.4f;
 
         bool previously_grounded = false;
         Vector2 previous_velocity = Vector2.zero;
 
         float fall_damage_threshold = -15f;     // Anything more (> -15) does no damage when falling
+        float jump_delay = 0.2f;    // Can't jump again jump_Delay seconds after the last jump. Prevents weird super jumping.
+        float cur_jump_delay = 0;
 
 
         private void Awake()
@@ -67,6 +69,7 @@ namespace UnityStandardAssets._2D
         private void Update()
         {
             AdjustStamina(Time.deltaTime * stamina_regen_per_second);
+            cur_jump_delay -= Time.deltaTime;
 
             if (!m_Jump)
             {
@@ -165,7 +168,7 @@ namespace UnityStandardAssets._2D
 
 
         // Main method for resolving user input
-        public void Move(float horizontal_input, float vertical_input, bool climbing, bool jump)
+        public void Move(float horizontal_input, float vertical_input, bool climbing_button, bool jump)
         {
             // If crouching, check to see if the character can stand up
             /*if (!crouch) // && m_Anim.GetBool("Crouch"))
@@ -180,8 +183,12 @@ namespace UnityStandardAssets._2D
             // Set whether or not the character is crouching in the animator
             //m_Anim.SetBool("Crouch", crouch);
 
+            // Stop climbing if we let go of the button
+            if (!climbing_button && is_climbing)
+                StopClimbing();
+
             // Are we climbing?
-            if (climbing & is_climbing)
+            if (climbing_button & is_climbing)
             {
                 // Climbing sideways on wall
                 m_Rigidbody2D.velocity = new Vector2(horizontal_input * climbing_max_speed, vertical_input * climbing_max_speed);
@@ -215,8 +222,10 @@ namespace UnityStandardAssets._2D
                         Flip();
                     }
                 }
+
+
                 // If the player should jump...
-                if (m_Grounded && jump && stamina >= jump_stamina_cost) // && m_Anim.GetBool("Ground"))
+                if (m_Grounded && jump && stamina >= jump_stamina_cost && cur_jump_delay <= 0) // && m_Anim.GetBool("Ground"))
                 {
                     AdjustStamina(-jump_stamina_cost);
 
@@ -224,6 +233,12 @@ namespace UnityStandardAssets._2D
                     m_Grounded = false;
                     //m_Anim.SetBool("Ground", false);
                     m_Rigidbody2D.AddForce(new Vector2(0f, m_JumpForce));
+
+                    // Add a delay so we can't jump again immediately
+                    cur_jump_delay = jump_delay;
+
+                    // Remove our current Y velocity so when moving up slopes we don't get a boost
+                    m_Rigidbody2D.velocity = new Vector2(m_Rigidbody2D.velocity.x, 0);
                 }
             }
         }
@@ -238,7 +253,7 @@ namespace UnityStandardAssets._2D
         // HP is <= 1. If <= 0, the player is dead
         public void AdjustHP(float amount)
         {
-            HP = Mathf.Clamp(stamina + amount, 0, 1);
+            HP = Mathf.Clamp(HP + amount, 0, 1);
             HP_slider.value = HP;
 
             if (HP <= 0)

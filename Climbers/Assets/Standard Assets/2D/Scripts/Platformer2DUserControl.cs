@@ -4,16 +4,16 @@ using UnityStandardAssets.CrossPlatformInput;
 
 namespace UnityStandardAssets._2D
 {
-    [RequireComponent(typeof (PlatformerCharacter2D))]
+   // [RequireComponent(typeof (PlatformerCharacter2D))]
     public class Platformer2DUserControl : MonoBehaviour
     {
-        private PlatformerCharacter2D m_Character;
+        //private PlatformerCharacter2D m_Character;
         private bool m_Jump;
 
 
         private void Awake()
         {
-            m_Character = GetComponent<PlatformerCharacter2D>();
+            //m_Character = GetComponent<PlatformerCharacter2D>();
         }
 
 
@@ -33,13 +33,13 @@ namespace UnityStandardAssets._2D
             bool climb = Input.GetKey(KeyCode.LeftShift);
 
             if (climb)
-                m_Character.StartClimbing();
+               // m_Character.StartClimbing();
 
-            float h = CrossPlatformInputManager.GetAxis("Horizontal");
-            float v = CrossPlatformInputManager.GetAxis("Vertical");
+            //float h = CrossPlatformInputManager.GetAxis("Horizontal");
+            //float v = CrossPlatformInputManager.GetAxis("Vertical");
             
             // Pass all parameters to the character control script.
-            m_Character.Move(h, v, climb, m_Jump);
+            //m_Character.Move(h, v, climb, m_Jump);
             m_Jump = false;
         }
     }

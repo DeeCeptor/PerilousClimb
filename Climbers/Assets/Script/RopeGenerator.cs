@@ -49,8 +49,17 @@ public class RopeGenerator : MonoBehaviour
             joints[j].GetComponent<HingeJoint2D>().connectedBody = joints[j + 1].GetComponent<Rigidbody2D>();
         }
 
+        // Set their neighbours
+        for (int x = 0; x < number_of_segments; x++)
+        {
+            int above_int = Mathf.Clamp(x - 1, 0, number_of_segments - 1);
+            int below_int = Mathf.Clamp(x + 1, 0, number_of_segments - 1);
+            joints[x].GetComponent<Link>().above = joints[above_int];
+            joints[x].GetComponent<Link>().below = joints[below_int];
+        }
+
         // Disable the hingejoint on the last rope semgnet
-        if (initial_anchor == null)
+        if (initial_anchor == null || true)
         {
             joints[joints.Count - 1].GetComponent<HingeJoint2D>().enabled = false;
             joints[joints.Count - 1].GetComponent<HingeJoint2D>().connectedAnchor = Vector2.zero;
@@ -58,10 +67,23 @@ public class RopeGenerator : MonoBehaviour
         else
         {
             // Make the end tied to the player's waist
+            /*
             joints[joints.Count - 1].GetComponent<HingeJoint2D>().connectedBody = initial_anchor;
             joints[joints.Count - 1].GetComponent<HingeJoint2D>().connectedAnchor = Vector2.zero;
 
             initial_anchor.GetComponent<PlatformerCharacter2D>().connected_joint = joints[joints.Count - 1].GetComponent<HingeJoint2D>();
+            */
+            joints[joints.Count - 1].GetComponent<HingeJoint2D>().enabled = false;
+            joints[joints.Count - 1].GetComponent<HingeJoint2D>().connectedAnchor = Vector2.zero;
+
+            // Activate the joint on the player object, and attach it to the end rope segment
+            PlatformerCharacter2D player = initial_anchor.GetComponent<PlatformerCharacter2D>();
+            player.connected_joint.enabled = true;
+            player.connected_joint.connectedBody = joints[joints.Count - 1].GetComponent<Rigidbody2D>();
+
+            //player.rope_follower.SetActive(true);
+            //player.rope_follower.GetComponent<FollowObject>().object_to_follow = joints[joints.Count - 1].transform;
+            //player.connected_joint.connectedBody = player.rope_follower.GetComponent<Rigidbody2D>();
         }
 
         // Make the start attachable to the terrain, like a grappling hook

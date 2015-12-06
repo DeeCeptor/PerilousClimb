@@ -13,7 +13,7 @@ public class PlatformerCharacter2D : MonoBehaviour
     public float rope_throw_force = 3000;
 
     private Transform m_GroundCheck;    // A position marking where to check if the player is grounded.
-    const float k_GroundedRadius = .2f; // Radius of the overlap circle to determine if grounded
+    const float k_GroundedRadius = .07f; // Radius of the overlap circle to determine if grounded
     private bool m_Grounded;            // Whether or not the player is grounded.
     private Transform m_CeilingCheck;   // A position marking where to check for ceilings
     const float k_CeilingRadius = .01f; // Radius of the overlap circle to determine if the player can stand up
@@ -28,8 +28,10 @@ public class PlatformerCharacter2D : MonoBehaviour
     [SerializeField] private float climbing_max_speed = 2;
     private float slope_friction = 0.6f;
     [HideInInspector] public float normal_gravity_factor;
-    [HideInInspector] public bool can_climb = false;  // If over a climbasble section, this is set to true
+    [HideInInspector] public bool can_climb = false;  // If over a climbable section, this is set to true
     [HideInInspector] public bool is_climbing = false;
+    [HideInInspector] public bool can_climb_rope = false;
+    [HideInInspector] public bool is_climbing_rope = false;
 
     [HideInInspector] public float HP = 1;
     [HideInInspector] public float stamina = 1;   // Stamina dictates if we can do stressful actions. Low stamina means no.
@@ -50,8 +52,9 @@ public class PlatformerCharacter2D : MonoBehaviour
     float jump_delay = 0.2f;    // Can't jump again jump_Delay seconds after the last jump. Prevents weird super jumping.
     float cur_jump_delay = 0;
 
+    [HideInInspector]
     public HingeJoint2D connected_joint;    // Joinbt that is used to connect a player to a rope
-
+    public GameObject rope_follower;
 
     private void Awake()
     {
@@ -61,6 +64,7 @@ public class PlatformerCharacter2D : MonoBehaviour
         //m_Anim = GetComponent<Animator>();
         m_Rigidbody2D = GetComponent<Rigidbody2D>();
         normal_gravity_factor = m_Rigidbody2D.gravityScale;
+        connected_joint = this.GetComponent<HingeJoint2D>();
 
         AdjustHP(0);
         AdjustStamina(0);
@@ -91,7 +95,7 @@ public class PlatformerCharacter2D : MonoBehaviour
 
             // Call throw rope on the rope generator
             // 3000 on 1 mass ropes
-            rope_parent.GetComponent<RopeGenerator>().Throw_Rope(this.transform.position, look_direction, 3000, m_Rigidbody2D);
+            rope_parent.GetComponent<RopeGenerator>().Throw_Rope(this.transform.position, look_direction, rope_throw_force, m_Rigidbody2D);
         }
     }
 
@@ -137,85 +141,105 @@ public class PlatformerCharacter2D : MonoBehaviour
 
         // Set the vertical animation
         ////m_Anim.SetFloat("vSpeed", m_Rigidbody2D.velocity.y);
-
-        // Attempt vertical normalization
-        // To prevent player from sliding down slopes, turn off gravity if they are touching the ground
-        /*
-        if (m_Grounded)
-        {
-            //m_Rigidbody2D.gravityScale = 0.5f;
-                
-            Debug.Log("A");
-            RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 2f, m_WhatIsGround);
-            if (hit.collider != null)
-                Debug.Log(hit.normal);
-            if (hit.collider != null && Mathf.Abs(hit.normal.x) > 0.1f)
-            {
-                Debug.Log("b");
-
-                Rigidbody2D body = GetComponent<Rigidbody2D>();
-                // Apply the opposite force against the slope force 
-                // You will need to provide your own slopeFriction to stabalize movement
-                body.velocity = new Vector2(body.velocity.x - (hit.normal.x * slope_friction), body.velocity.y);
-
-                //Move Player up or down to compensate for the slope below them
-                Vector3 pos = transform.position;
-                pos.y += -hit.normal.x * Mathf.Abs(body.velocity.x) * Time.deltaTime * (body.velocity.x - hit.normal.x > 0 ? 1 : -1);
-                transform.position = pos;
-            }
-            */
-
-        //}
-        //else
-        //    m_Rigidbody2D.gravityScale = normal_gravity_factor;
+        
 
         // Read the inputs.
         bool climb = Input.GetKey(KeyCode.LeftShift);
-
-        if (climb)
-            this.StartClimbing();
-
         float h = Input.GetAxis("Horizontal");
         float v = Input.GetAxis("Vertical");
 
-        // Stop the player from changing their horizontal velocity by checking to see if the connected joint
-        // is tugging at the limit of its rope
+        if (climb)
+        {
+            if (can_climb_rope && !is_climbing_rope)
+                this.StartClimbingRope();
+            else
+                this.StartClimbing();
+        }
+
+        if (m_Jump && is_climbing_rope)
+            this.StopClimbingRope();
+
+
+
+        // Change the way we interpret input if we're connected to a rope
         if (connected_joint != null)
         {
-            float maximum_expected_force = m_Rigidbody2D.mass * 200 - 100;
-
-            // 4000 force, 20 mass, 200 acceleration, for 0.02 timestep
-            // F = MA
-            // 3 x 10
-            if (Mathf.Abs(connected_joint.GetReactionForce(Time.deltaTime).x) >= maximum_expected_force)
+            // Stop the player from changing their horizontal velocity by checking to see if the connected joint
+            // is tugging at the limit of its rope
+            if (Math.Abs(h) > 0)
             {
-                h = 0;
-                Debug.Log(connected_joint.GetReactionForce(Time.deltaTime) + " : " + (maximum_expected_force));
+                float maximum_expected_force = m_Rigidbody2D.mass * (1 / Time.deltaTime) - 1000;
+                //Debug.Log(connected_joint.GetReactionForce(Time.deltaTime).x + " : " + maximum_expected_force);
+                // 4000 force, 20 mass, 200 acceleration, for 0.02 timestep
+                // F = MA
+                // 3 x 10
+                if (Mathf.Abs(connected_joint.GetReactionForce(Time.deltaTime).x) >= maximum_expected_force)
+                {
+                    h = 0;
+                    Debug.Log(connected_joint.GetReactionForce(Time.deltaTime) + " : " + (maximum_expected_force));
+                }
             }
         }
 
-        // Pass all parameters to the character control script.
-        this.Move(h, v, climb, m_Jump);
+        // Pass all parameters to the character control script
+        if (is_climbing_rope)
+            MoveOnRope(h, v);
+        else
+            this.Move(h, v, climb, m_Jump);
+
         m_Jump = false;
+    }
+
+
+    public Transform current_segment;
+    public Transform above_segment;
+    public Transform below_segment;
+    public Link rope_in_background;
+    float climbing_speed = 0.5f;
+    float distance_between_segments = 0;
+
+    // Controls all movement on the rope
+    public void MoveOnRope(float h, float v)
+    {
+        // If at the next segment, find the next segment
+        if (distance_between_segments >= 1)
+        {
+            below_segment = current_segment;
+            current_segment = current_segment.GetComponent<Link>().above.transform;
+            above_segment = current_segment.GetComponent<Link>().above.transform;
+            distance_between_segments = 0;
+        }
+        else if (distance_between_segments <= -1)
+        {
+            above_segment = current_segment;
+            current_segment = current_segment.GetComponent<Link>().below.transform;
+            below_segment = current_segment.GetComponent<Link>().below.transform;
+            distance_between_segments = 0;
+        }
+
+        // Keep track of how far between the two segments we are
+        distance_between_segments = Mathf.Clamp(distance_between_segments + v * climbing_speed, -1, 1);
+
+        if (distance_between_segments >= 0)
+        {
+            this.transform.position = Vector2.Lerp(current_segment.transform.position, above_segment.transform.position, distance_between_segments);
+        }
+        else
+        {
+            this.transform.position = Vector2.Lerp(current_segment.transform.position, below_segment.transform.position, Mathf.Abs(distance_between_segments));
+        }
+
+        // Swing rope left and right
+        if (h != 0)
+        {
+            current_segment.GetComponent<Rigidbody2D>().AddForce(new Vector2(h * 100, 0));
+        }
     }
 
 
     // Main method for resolving user input
     public void Move(float horizontal_input, float vertical_input, bool climbing_button, bool jump)
     {
-        // If crouching, check to see if the character can stand up
-        /*if (!crouch) // && m_Anim.GetBool("Crouch"))
-        {
-            // If the character has a ceiling preventing them from standing up, keep them crouching
-            if (Physics2D.OverlapCircle(m_CeilingCheck.position, k_CeilingRadius, m_WhatIsGround))
-            {
-                crouch = true;
-            }
-        }*/
-
-        // Set whether or not the character is crouching in the animator
-        //m_Anim.SetBool("Crouch", crouch);
-
         // Stop climbing if we let go of the button
         if (!climbing_button && is_climbing)
             StopClimbing();
@@ -226,56 +250,77 @@ public class PlatformerCharacter2D : MonoBehaviour
             // Climbing sideways on wall
             m_Rigidbody2D.velocity = new Vector2(horizontal_input * climbing_max_speed, vertical_input * climbing_max_speed);
         }
+        else if (connected_joint != null && vertical_input != 0)
+        {
+            // Move up or down
+            connected_joint.connectedAnchor = new Vector2(connected_joint.connectedAnchor.x, connected_joint.connectedAnchor.y + vertical_input / 100f);
+        }
         // Are we walking?
-        else
+        else if (m_Grounded || m_AirControl)
         {
             // Normal ground movement
             // Only control the player if grounded or airControl is turned on
-            if (m_Grounded || m_AirControl)
+
+            // Reduce the speed if crouching by the crouchSpeed multiplier
+            //horizontal_input = (crouch ? horizontal_input * m_CrouchSpeed : horizontal_input);
+
+            // The Speed animator parameter is set to the absolute value of the horizontal input.
+            //m_Anim.SetFloat("Speed", Mathf.Abs(move));
+
+            // Move the character
+            m_Rigidbody2D.velocity = new Vector2(horizontal_input * m_MaxSpeed, m_Rigidbody2D.velocity.y);
+
+            // If the input is moving the player right and the player is facing left...
+            if (horizontal_input > 0 && !m_FacingRight)
             {
-                // Reduce the speed if crouching by the crouchSpeed multiplier
-                //horizontal_input = (crouch ? horizontal_input * m_CrouchSpeed : horizontal_input);
-
-                // The Speed animator parameter is set to the absolute value of the horizontal input.
-                //m_Anim.SetFloat("Speed", Mathf.Abs(move));
-
-                // Move the character
-                m_Rigidbody2D.velocity = new Vector2(horizontal_input * m_MaxSpeed, m_Rigidbody2D.velocity.y);
-
-                // If the input is moving the player right and the player is facing left...
-                if (horizontal_input > 0 && !m_FacingRight)
-                {
-                    // ... flip the player.
-                    Flip();
-                }
-                // Otherwise if the input is moving the player left and the player is facing right...
-                else if (horizontal_input < 0 && m_FacingRight)
-                {
-                    // ... flip the player.
-                    Flip();
-                }
+                // ... flip the player.
+                Flip();
             }
-
-
-            // If the player should jump...
-            if (m_Grounded && jump && stamina >= jump_stamina_cost && cur_jump_delay <= 0) // && m_Anim.GetBool("Ground"))
+            // Otherwise if the input is moving the player left and the player is facing right...
+            else if (horizontal_input < 0 && m_FacingRight)
             {
-                AdjustStamina(-jump_stamina_cost);
+                // ... flip the player.
+                Flip();
+            }
+        }
 
-                // Add a vertical force to the player.
-                m_Grounded = false;
-                //m_Anim.SetBool("Ground", false);
-                m_Rigidbody2D.AddForce(new Vector2(0f, m_JumpForce));
 
-                // Add a delay so we can't jump again immediately
-                cur_jump_delay = jump_delay;
-
-                // Remove our current Y velocity so when moving up slopes we don't get a boost
-                m_Rigidbody2D.velocity = new Vector2(m_Rigidbody2D.velocity.x, 0);
+        // If the player should jump...
+        if (jump && stamina >= jump_stamina_cost && cur_jump_delay <= 0)
+        {
+            // On the ground, jump normally
+            if (m_Grounded) // && m_Anim.GetBool("Ground"))
+            {
+                AddJumpVelocity();
+            }
+            // Player jumped while not grounded and connect to a rope
+            else if (!m_Grounded && connected_joint != null && connected_joint.enabled)
+            {
+                // Disconnect the rope
+                connected_joint.enabled = false;
+                // Jump
+                AddJumpVelocity();
             }
         }
     }
+    // Adds an upwards force to the player
+    public void AddJumpVelocity()
+    {
+        AdjustStamina(-jump_stamina_cost);
 
+        // Add a vertical force to the player.
+        m_Grounded = false;
+
+        //m_Anim.SetBool("Ground", false);
+
+        // Add a delay so we can't jump again immediately
+        cur_jump_delay = jump_delay;
+
+        // Remove our current Y velocity so when moving up slopes we don't get a boost
+        m_Rigidbody2D.velocity = new Vector2(m_Rigidbody2D.velocity.x, 0);
+
+        m_Rigidbody2D.AddForce(new Vector2(0f, m_JumpForce));
+    }
 
     // Stamina is always between 0 and 1
     public void AdjustStamina(float amount)
@@ -313,6 +358,24 @@ public class PlatformerCharacter2D : MonoBehaviour
         this.m_Rigidbody2D.gravityScale = normal_gravity_factor;
     }
 
+    public void StartClimbingRope()
+    {
+        is_climbing_rope = true;
+
+        this.GetComponent<Rigidbody2D>().isKinematic = true;
+        //this.GetComponent<Rigidbody2D>().gravityScale = 0;
+        this.GetComponent<Rigidbody2D>().velocity = Vector2.zero;
+
+        current_segment = rope_in_background.transform;
+        above_segment = rope_in_background.above.transform;
+        below_segment = rope_in_background.below.transform;
+    }
+    public void StopClimbingRope()
+    {
+        is_climbing_rope = false;
+        this.GetComponent<Rigidbody2D>().isKinematic = false;
+        //this.GetComponent<Rigidbody2D>().gravityScale = normal_gravity_factor;
+    }
 
     private void Flip()
     {

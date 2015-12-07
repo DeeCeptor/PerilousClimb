@@ -39,7 +39,7 @@ public class RopeGenerator : MonoBehaviour
             GameObject segment = ((GameObject)Instantiate(emptyPrefab,
                 new Vector3(start_position.x, start_position.y, 0), Quaternion.identity));
             joints.Add(segment);
-            //segment.transform.parent = transform;
+            segment.transform.parent = transform;
         }
 
         // Connect them with hingejoints
@@ -59,7 +59,7 @@ public class RopeGenerator : MonoBehaviour
         }
 
         // Disable the hingejoint on the last rope semgnet
-        if (initial_anchor == null || true)
+        if (initial_anchor == null)
         {
             joints[joints.Count - 1].GetComponent<HingeJoint2D>().enabled = false;
             joints[joints.Count - 1].GetComponent<HingeJoint2D>().connectedAnchor = Vector2.zero;

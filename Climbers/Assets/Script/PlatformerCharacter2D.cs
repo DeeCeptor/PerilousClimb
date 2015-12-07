@@ -13,7 +13,7 @@ public class PlatformerCharacter2D : MonoBehaviour
     public float rope_throw_force = 3000;
 
     private Transform m_GroundCheck;    // A position marking where to check if the player is grounded.
-    const float k_GroundedRadius = .07f; // Radius of the overlap circle to determine if grounded
+    const float k_GroundedRadius = .1f; // Radius of the overlap circle to determine if grounded
     private bool m_Grounded;            // Whether or not the player is grounded.
     private Transform m_CeilingCheck;   // A position marking where to check for ceilings
     const float k_CeilingRadius = .01f; // Radius of the overlap circle to determine if the player can stand up
@@ -89,13 +89,39 @@ public class PlatformerCharacter2D : MonoBehaviour
         }
 
         // Throw rope if clicking
-        if (Input.GetKeyDown(KeyCode.Mouse0))
+        if (Input.GetKeyDown(KeyCode.Mouse0))   // Left click
         {
-            GameObject rope_parent = (GameObject)Instantiate(Resources.Load("Rope"), transform.position, transform.rotation);
-
             // Call throw rope on the rope generator
+            GameObject rope_parent = (GameObject)Instantiate(Resources.Load("Rope"), transform.position, transform.rotation);
+            // 3000 on 1 mass ropes
+            rope_parent.GetComponent<RopeGenerator>().Throw_Rope(this.transform.position, look_direction, rope_throw_force, null);
+        }
+        // Throw rope that is tied around the player's waist
+        if (Input.GetKeyDown(KeyCode.Mouse1))   // Right click
+        {
+            // Call throw rope on the rope generator
+            GameObject rope_parent = (GameObject)Instantiate(Resources.Load("Rope"), transform.position, transform.rotation);
             // 3000 on 1 mass ropes
             rope_parent.GetComponent<RopeGenerator>().Throw_Rope(this.transform.position, look_direction, rope_throw_force, m_Rigidbody2D);
+        }
+        // Throw grappling hook
+        if (Input.GetKeyDown(KeyCode.Mouse2))   // Middle click
+        {
+            // Spawn a hook
+            GameObject hook = (GameObject)Instantiate(Resources.Load("Hook"), transform.position, transform.rotation);
+            // Set its velocity to fly towards the mouse point
+            hook.GetComponent<Rigidbody2D>().velocity = look_direction * 20f;
+            hook.GetComponent<HookToTerrain>().owner = this.gameObject;
+        }
+        // Destroy any rope the player is touching
+        if (Input.GetKeyDown(KeyCode.X))   // Middle click
+        {
+            if (rope_in_background != null && can_climb_rope && !is_climbing_rope)
+            {
+                GameObject.Destroy(rope_in_background.transform.parent.gameObject);
+                if (this.connected_joint.enabled)
+                    this.connected_joint.enabled = false;
+            }
         }
     }
 
@@ -161,7 +187,7 @@ public class PlatformerCharacter2D : MonoBehaviour
 
 
 
-        // Change the way we interpret input if we're connected to a rope
+        // Change the way we interpret input if we're connected to a rope 
         if (connected_joint != null)
         {
             // Stop the player from changing their horizontal velocity by checking to see if the connected joint
@@ -250,11 +276,12 @@ public class PlatformerCharacter2D : MonoBehaviour
             // Climbing sideways on wall
             m_Rigidbody2D.velocity = new Vector2(horizontal_input * climbing_max_speed, vertical_input * climbing_max_speed);
         }
+        /*
         else if (connected_joint != null && vertical_input != 0)
         {
             // Move up or down
             connected_joint.connectedAnchor = new Vector2(connected_joint.connectedAnchor.x, connected_joint.connectedAnchor.y + vertical_input / 100f);
-        }
+        }*/
         // Are we walking?
         else if (m_Grounded || m_AirControl)
         {
@@ -291,7 +318,7 @@ public class PlatformerCharacter2D : MonoBehaviour
             // On the ground, jump normally
             if (m_Grounded) // && m_Anim.GetBool("Ground"))
             {
-                AddJumpVelocity();
+                AddJumpVelocity(true);
             }
             // Player jumped while not grounded and connect to a rope
             else if (!m_Grounded && connected_joint != null && connected_joint.enabled)
@@ -299,12 +326,12 @@ public class PlatformerCharacter2D : MonoBehaviour
                 // Disconnect the rope
                 connected_joint.enabled = false;
                 // Jump
-                AddJumpVelocity();
+                AddJumpVelocity(false);
             }
         }
     }
     // Adds an upwards force to the player
-    public void AddJumpVelocity()
+    public void AddJumpVelocity(bool cancel_out__previous_y_velocity)
     {
         AdjustStamina(-jump_stamina_cost);
 
@@ -317,7 +344,8 @@ public class PlatformerCharacter2D : MonoBehaviour
         cur_jump_delay = jump_delay;
 
         // Remove our current Y velocity so when moving up slopes we don't get a boost
-        m_Rigidbody2D.velocity = new Vector2(m_Rigidbody2D.velocity.x, 0);
+        if (cancel_out__previous_y_velocity)
+            m_Rigidbody2D.velocity = new Vector2(m_Rigidbody2D.velocity.x, 0);
 
         m_Rigidbody2D.AddForce(new Vector2(0f, m_JumpForce));
     }
@@ -369,11 +397,20 @@ public class PlatformerCharacter2D : MonoBehaviour
         current_segment = rope_in_background.transform;
         above_segment = rope_in_background.above.transform;
         below_segment = rope_in_background.below.transform;
+
+        // Add your velocity to the rope's velocity
+        current_segment.GetComponent<Rigidbody2D>().velocity = new Vector2(m_Rigidbody2D.velocity.x, current_segment.GetComponent<Rigidbody2D>().velocity.y);
     }
     public void StopClimbingRope()
     {
-        is_climbing_rope = false;
         this.GetComponent<Rigidbody2D>().isKinematic = false;
+
+        if (is_climbing_rope && rope_in_background != null)
+        {
+            // Set our velocity to the velocity of the rope
+            m_Rigidbody2D.velocity = rope_in_background.GetComponent<Rigidbody2D>().velocity;
+        }
+        is_climbing_rope = false;
         //this.GetComponent<Rigidbody2D>().gravityScale = normal_gravity_factor;
     }
 

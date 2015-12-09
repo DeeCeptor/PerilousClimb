@@ -97,7 +97,7 @@ public class PlatformerCharacter2D : MonoBehaviour
             rope_parent.GetComponent<RopeGenerator>().Throw_Rope(this.transform.position, look_direction, rope_throw_force, null);
         }
         // Throw rope that is tied around the player's waist
-        if (Input.GetKeyDown(KeyCode.Mouse1))   // Right click
+        if (Input.GetKeyDown(KeyCode.Mouse2))   // Right click
         {
             // Call throw rope on the rope generator
             GameObject rope_parent = (GameObject)Instantiate(Resources.Load("Rope"), transform.position, transform.rotation);
@@ -105,7 +105,7 @@ public class PlatformerCharacter2D : MonoBehaviour
             rope_parent.GetComponent<RopeGenerator>().Throw_Rope(this.transform.position, look_direction, rope_throw_force, m_Rigidbody2D);
         }
         // Throw grappling hook
-        if (Input.GetKeyDown(KeyCode.Mouse2))   // Middle click
+        if (Input.GetKeyDown(KeyCode.Mouse1))   // Middle click
         {
             // Spawn a hook
             GameObject hook = (GameObject)Instantiate(Resources.Load("Hook"), transform.position, transform.rotation);
@@ -114,7 +114,7 @@ public class PlatformerCharacter2D : MonoBehaviour
             hook.GetComponent<HookToTerrain>().owner = this.gameObject;
         }
         // Destroy any rope the player is touching
-        if (Input.GetKeyDown(KeyCode.X))   // Middle click
+        if (Input.GetKeyDown(KeyCode.X))
         {
             if (rope_in_background != null && can_climb_rope && !is_climbing_rope)
             {

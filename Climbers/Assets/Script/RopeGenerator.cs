@@ -31,7 +31,7 @@ public class RopeGenerator : MonoBehaviour
 
 
     // Throw direction should be a normalized vector. Initial anchor is probably the player's body
-    public void Throw_Rope(Vector3 start_position, Vector2 throw_direction, float throw_force, Rigidbody2D initial_anchor)
+    public void Throw_Rope(Vector3 start_position, Vector2 throw_direction, float throw_force, Rigidbody2D initial_anchor, GameObject thrower)
     {
         // Spawn a number of segments
         for (int i = 0; i < number_of_segments; i++)
@@ -56,6 +56,10 @@ public class RopeGenerator : MonoBehaviour
             int below_int = Mathf.Clamp(x + 1, 0, number_of_segments - 1);
             joints[x].GetComponent<Link>().above = joints[above_int];
             joints[x].GetComponent<Link>().below = joints[below_int];
+            joints[x].GetComponent<Link>().top_most = joints[0];
+            joints[x].GetComponent<Link>().bottom_most = joints[number_of_segments - 1];
+            joints[x].GetComponent<Link>().position_from_top_in_rope = x;
+            joints[x].GetComponent<Link>().position_from_bottom_in_rope = number_of_segments - x;
         }
 
         // Disable the hingejoint on the last rope semgnet
@@ -89,6 +93,14 @@ public class RopeGenerator : MonoBehaviour
         // Make the start attachable to the terrain, like a grappling hook
         joints[0].AddComponent<AttachToTerrain>();
 
+        
+        // Add a hook to the first segment
+        //joints[0].AddComponent<HookToTerrain>();
+        //joints[0].GetComponent<HookToTerrain>().owner = thrower;
+        GameObject hook = (GameObject)Instantiate(Resources.Load("Hook"), joints[0].transform.position, Quaternion.identity);
+        hook.GetComponent<FollowObject>().object_to_follow = joints[0].transform;
+        hook.GetComponent<HookRope>().owner = thrower;
+        hook.GetComponent<HookRope>().rope_links = joints;
 
         // Add a force to the first rope segment
         joints[0].GetComponent<Rigidbody2D>().AddForce(throw_direction * throw_force);

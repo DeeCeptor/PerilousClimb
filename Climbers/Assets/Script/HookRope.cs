@@ -73,9 +73,18 @@ public class HookRope : MonoBehaviour
                 prev_obj.GetComponent<Rigidbody2D>().isKinematic = false;
             }
             cur_obj.GetComponent<Rigidbody2D>().isKinematic = true;
-
+            cur_obj.GetComponent<Rigidbody2D>().velocity = owner.GetComponent<Rigidbody2D>().velocity;
+            //Debug.Log(owner.GetComponent<Rigidbody2D>().angularVelocity);
             //cur_obj.transform.position = owner.transform.position;
-            cur_obj.transform.position = Vector3.Lerp(cur_obj.transform.position, owner.transform.position, 0.5f);
+            counter++;
+
+            if (counter > 10)
+            {
+                cur_obj.transform.position = Vector3.Lerp(cur_obj.transform.position, owner.transform.position, 0.5f);
+                //cur_obj.transform.position = owner.transform.position;
+                counter = 0;
+            }
+            
             /*
             TargetJoint2D j = cur_obj.GetComponent<TargetJoint2D>();
             if (j == null)
@@ -94,7 +103,7 @@ public class HookRope : MonoBehaviour
     }
     GameObject cur_obj;
     GameObject prev_obj = null;
-
+    int counter = 99;
     void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision.gameObject.layer == LayerMask.NameToLayer("Terrain")

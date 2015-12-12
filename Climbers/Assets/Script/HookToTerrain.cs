@@ -51,7 +51,6 @@ public class HookToTerrain : MonoBehaviour
                     // This means we're pulling against the terrain and are stuck. Give us an upward push to get over the ledge
                     //owner.GetComponent<Rigidbody2D>().AddForce(Vector2.up * 3000, ForceMode2D.Impulse);
                     owner.GetComponent<PlatformerCharacter2D>().AddJumpVelocity(false);
-                    Debug.Log(cur_distance + " : " + dist);
                     stuck_counter = 0;
                 }
             }

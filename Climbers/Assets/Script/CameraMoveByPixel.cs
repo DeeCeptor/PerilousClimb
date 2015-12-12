@@ -12,7 +12,25 @@ public class CameraMoveByPixel : MonoBehaviour
     {
         this_camera = this.GetComponent<Camera>();
         starting_z = this.transform.position.z;
-	}
+
+        SetCameraSize();
+    }
+
+    // Set the orthographic size of the camera
+    public void SetCameraSize()
+    {
+
+        // set the camera to the correct orthographic size
+        // (so scene pixels are 1:1)
+        //float s_baseOrthographicSize = Screen.height / 16.0f / 2.0f;
+        //Camera.main.orthographicSize = s_baseOrthographicSize;
+
+
+        //Camera.main.orthographicSize = Screen.width / (((Screen.width / Screen.height) * 2) * 16);
+        Camera.main.orthographicSize = Screen.height / (2 * 16);
+        //    x / (((x / y) * 2) * s)
+        //Camera Size = y / (2 * s)
+    }
 
 
     void LateUpdate ()

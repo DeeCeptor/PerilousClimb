@@ -53,7 +53,6 @@ public class HookRope : MonoBehaviour
                     // This means we're pulling against the terrain and are stuck. Give us an upward push to get over the ledge
                     //owner.GetComponent<Rigidbody2D>().AddForce(Vector2.up * 3000, ForceMode2D.Impulse);
                     owner.GetComponent<PlatformerCharacter2D>().AddJumpVelocity(false);
-                    Debug.Log(cur_distance + " : " + dist);
                     stuck_counter = 0;
                 }
             }
@@ -109,17 +108,22 @@ public class HookRope : MonoBehaviour
         if (collision.gameObject.layer == LayerMask.NameToLayer("Terrain")
             && Vector2.Distance(owner.transform.position, this.transform.position) < max_hooking_distance)
         {
-            hooked = true;
-            this.GetComponent<Rigidbody2D>().isKinematic = true;
-
-            // Activate the springjoint on this object, and set the distance 
-            SpringJoint2D joint = this.GetComponent<SpringJoint2D>();
-            joint.enabled = true;
-            joint.connectedBody = owner.GetComponent<Rigidbody2D>();
-            cur_distance = Vector2.Distance(this.transform.position, owner.transform.position);
-            joint.distance = cur_distance;
-            //lineenabled = true;
+            Attach();
         }
+    }
+    void Attach()
+    {
+        hooked = true;
+        this.GetComponent<Rigidbody2D>().isKinematic = true;
+
+        // Activate the springjoint on this object, and set the distance 
+        SpringJoint2D joint = this.GetComponent<SpringJoint2D>();
+        joint.enabled = true;
+        joint.connectedBody = owner.GetComponent<Rigidbody2D>();
+        cur_distance = Vector2.Distance(this.transform.position, owner.transform.position);
+        joint.distance = cur_distance;
+        owner.GetComponent<PlatformerCharacter2D>().m_AirControl = false;
+        //lineenabled = true;
     }
     // Detaches player from grappling hook
     void Detach()
@@ -129,6 +133,8 @@ public class HookRope : MonoBehaviour
         owner.GetComponent<PlatformerCharacter2D>().AddJumpVelocity(false);
         prev_obj.GetComponent<Rigidbody2D>().isKinematic = false;
         cur_obj.GetComponent<Rigidbody2D>().isKinematic = false;
+        owner.GetComponent<PlatformerCharacter2D>().m_AirControl = true;
+
         //lineenabled = false;
         //owner.GetComponent<Rigidbody2D>().gravityScale = 1;
     }

@@ -8,7 +8,7 @@ public class PlatformerCharacter2D : MonoBehaviour
     [SerializeField] private float m_MaxSpeed = 10f;                    // The fastest the player can travel in the x axis.
     [SerializeField] private float m_JumpForce = 400f;                  // Amount of force added when the player jumps.
     [Range(0, 1)] [SerializeField] private float m_CrouchSpeed = .36f;  // Amount of maxSpeed applied to crouching movement. 1 = 100%
-    [SerializeField] private bool m_AirControl = false;                 // Whether or not a player can steer while jumping;
+    [SerializeField] public bool m_AirControl = false;                 // Whether or not a player can steer while jumping;
     [SerializeField] private LayerMask m_WhatIsGround;                  // A mask determining what is ground to the character
     public float rope_throw_force = 3000;
     public float swing_force = 10f;     // The forced with which we swing left and right on the rope
@@ -39,6 +39,9 @@ public class PlatformerCharacter2D : MonoBehaviour
     [HideInInspector] public float stamina = 1;   // Stamina dictates if we can do stressful actions. Low stamina means no.
     private float stamina_regen_per_second = 0.5f;  // How much stamina is regenerated per second
     [HideInInspector] public float encumbrance = 0;   // How much weight we're carrying
+
+    // Used to get input
+    public Player player;
 
     // Drag these in from the UI
     public Slider HP_slider;
@@ -76,11 +79,8 @@ public class PlatformerCharacter2D : MonoBehaviour
 
     private void Update()
     {
-        // Find where/if the player is aiming with the mouse
-        Vector3 mouse = Input.mousePosition;
-        Vector3 screenPoint = Camera.main.WorldToScreenPoint(transform.localPosition);
-        Vector2 look_direction = new Vector2(mouse.x - screenPoint.x, mouse.y - screenPoint.y);
-        look_direction.Normalize();
+        // Find where/if the player is aiming with the mouse or right joystick
+        Vector2 look_direction = player.GetNormalizedAimingVector();
 
         AdjustStamina(Time.deltaTime * stamina_regen_per_second);
         cur_jump_delay -= Time.deltaTime;
@@ -88,11 +88,11 @@ public class PlatformerCharacter2D : MonoBehaviour
         if (!m_Jump)
         {
             // Read the jump input in Update so button presses aren't missed.
-            m_Jump = Input.GetButtonDown("Jump");
+            m_Jump = player.IsButtonPressed("Jump");
         }
 
         // Throw rope if clicking
-        if (Input.GetKeyDown(KeyCode.Mouse0))   // Left click
+        if (player.IsButtonPressed("LeftTrigger"))   // Left click
         {
             // Call throw rope on the rope generator
             GameObject rope_parent = (GameObject)Instantiate(Resources.Load("Rope"), transform.position, transform.rotation);
@@ -100,7 +100,7 @@ public class PlatformerCharacter2D : MonoBehaviour
             rope_parent.GetComponent<RopeGenerator>().Throw_Rope(this.transform.position, look_direction, rope_throw_force, null, this.gameObject);
         }
         // Throw rope that is tied around the player's waist
-        if (Input.GetKeyDown(KeyCode.Mouse2))   // Right click
+        if (player.IsButtonPressed("LeftBumper"))   // Middle click
         {
             // Call throw rope on the rope generator
             GameObject rope_parent = (GameObject)Instantiate(Resources.Load("Rope"), transform.position, transform.rotation);
@@ -108,7 +108,7 @@ public class PlatformerCharacter2D : MonoBehaviour
             rope_parent.GetComponent<RopeGenerator>().Throw_Rope(this.transform.position, look_direction, rope_throw_force, m_Rigidbody2D, this.gameObject);
         }
         // Throw grappling hook
-        if (Input.GetKeyDown(KeyCode.Mouse1))   // Middle click
+        if (player.IsButtonPressed("RightTrigger"))   // Right click
         {
             // Spawn a hook
             GameObject hook = (GameObject)Instantiate(Resources.Load("Hook2"), transform.position, transform.rotation);
@@ -117,11 +117,12 @@ public class PlatformerCharacter2D : MonoBehaviour
             hook.GetComponent<HookToTerrain>().owner = this.gameObject;
         }
         // Destroy any rope the player is touching
-        if (Input.GetKeyDown(KeyCode.X))
+        if (player.IsButtonPressed("B"))
         {
             if (rope_in_background != null && can_climb_rope && !is_climbing_rope)
             {
                 GameObject.Destroy(rope_in_background.transform.parent.gameObject);
+                rope_in_background = null;
                 if (this.connected_joint.enabled)
                     this.connected_joint.enabled = false;
             }
@@ -173,9 +174,9 @@ public class PlatformerCharacter2D : MonoBehaviour
         
 
         // Read the inputs.
-        bool climb = Input.GetKey(KeyCode.LeftShift);
-        float h = Input.GetAxis("Horizontal");
-        float v = Input.GetAxis("Vertical");
+        bool climb = player.IsButtonCurrentlyDown("RightBumper");
+        float h = player.GetAxis("Horizontal");
+        float v = player.GetAxis("Vertical");
 
         if (climb)
         {
@@ -360,13 +361,13 @@ public class PlatformerCharacter2D : MonoBehaviour
     public void AdjustStamina(float amount)
     {
         stamina = Mathf.Clamp(stamina + amount, 0, 1);
-        stamina_slider.value = stamina;
+        //stamina_slider.value = stamina;
     }
     // HP is <= 1. If <= 0, the player is dead
     public void AdjustHP(float amount)
     {
         HP = Mathf.Clamp(HP + amount, 0, 1);
-        HP_slider.value = HP;
+        //HP_slider.value = HP;
 
         if (HP <= 0)
         {

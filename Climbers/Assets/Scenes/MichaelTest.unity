@@ -5000,6 +5000,7 @@ GameObject:
   serializedVersion: 4
   m_Component:
   - 4: {fileID: 240100787}
+  - 114: {fileID: 240100788}
   m_Layer: 0
   m_Name: Players
   m_TagString: Untagged
@@ -5021,6 +5022,18 @@ Transform:
   - {fileID: 1791186850}
   m_Father: {fileID: 0}
   m_RootOrder: 12
+--- !u!114 &240100788
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 240100786}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02aab7e34f5c0e14b9e9e60efe7ccec5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  players: []
 --- !u!4 &241470506 stripped
 Transform:
   m_PrefabParentObject: {fileID: 403064, guid: c63cad0761657d84fad9fd84dc3c1493, type: 2}
@@ -6073,6 +6086,10 @@ Prefab:
     - target: {fileID: 5053632, guid: bef8f6623aff3d345accee0198a2aaf1, type: 2}
       propertyPath: m_Interpolate
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11431162, guid: bef8f6623aff3d345accee0198a2aaf1, type: 2}
+      propertyPath: forced_air_control_movement_speed
+      value: 50
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: bef8f6623aff3d345accee0198a2aaf1, type: 2}
@@ -13122,7 +13139,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1f85ee7c4f0bec140ad56741cd3c5ab4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  object_to_follow: {fileID: 2067285717}
+  camera_offset: {x: 0, y: 5}
 --- !u!114 &700589322
 MonoBehaviour:
   m_ObjectHideFlags: 0

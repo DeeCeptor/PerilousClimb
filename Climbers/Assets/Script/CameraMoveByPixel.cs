@@ -3,7 +3,7 @@ using System.Collections;
 
 public class CameraMoveByPixel : MonoBehaviour
 {
-    public Transform object_to_follow;  // Object we are tracking
+    public Vector2 camera_offset;   // Applied if we are playing by ourselves
     private Camera this_camera;
     private float starting_z;
 
@@ -35,8 +35,19 @@ public class CameraMoveByPixel : MonoBehaviour
 
     void LateUpdate ()
     {
-        this.transform.position = new Vector3(RoundToNearestPixel(object_to_follow.transform.position.x, this_camera),
-                                              RoundToNearestPixel(object_to_follow.transform.position.y, this_camera),
+        int num_players = 0;
+        Vector2 averaged_player_position = Vector2.zero;
+        // Calculate the average position to follow
+        foreach (PlatformerCharacter2D player in PlayerInformation.player_information.players)
+        {
+            num_players++;
+            averaged_player_position += (Vector2) player.transform.position;
+        }
+        averaged_player_position += camera_offset;
+        averaged_player_position = averaged_player_position / num_players;
+
+        this.transform.position = new Vector3(RoundToNearestPixel(averaged_player_position.x, this_camera),
+                                              RoundToNearestPixel(averaged_player_position.y, this_camera),
                                               starting_z);
 	}
 

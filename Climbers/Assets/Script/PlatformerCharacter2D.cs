@@ -10,6 +10,9 @@ public class PlatformerCharacter2D : MonoBehaviour
     [SerializeField] private float m_JumpForce = 400f;                  // Amount of force added when the player jumps.
     [Range(0, 1)] [SerializeField] private float m_CrouchSpeed = .36f;  // Amount of maxSpeed applied to crouching movement. 1 = 100%
     [SerializeField] public bool m_AirControl = false;                 // Whether or not a player can steer while jumping;
+    public float forced_air_control_movement_speed = 50f;
+    [SerializeField] public bool forced_air_control = false;     // Does not change the player's velocity in midair, instead allowing the player to use forces to move
+    [SerializeField] public bool on_ice = false;     // Changes the controls from velocity changing to using forces.
     [SerializeField] private LayerMask m_WhatIsGround;                  // A mask determining what is ground to the character
     public float rope_throw_force = 3000;
     public float swing_force = 10f;     // The forced with which we swing left and right on the rope
@@ -75,6 +78,12 @@ public class PlatformerCharacter2D : MonoBehaviour
 
         AdjustHP(0);
         AdjustStamina(0);
+    }
+
+
+    void Start()
+    {
+        PlayerInformation.player_information.players.Add(this);
     }
 
 
@@ -170,7 +179,17 @@ public class PlatformerCharacter2D : MonoBehaviour
 
             if (is_grappling)
                 this.DetachFromRope(false);
+
+            forced_air_control = false;
+            m_AirControl = true;
         }
+        if (m_Grounded )
+            //|| (forced_air_control && (Mathf.Abs(m_Rigidbody2D.velocity.x) < m_MaxSpeed) && false))
+        {
+            forced_air_control = false;
+            m_AirControl = true;
+        }
+
 
         //m_Anim.SetBool("Ground", m_Grounded);
 
@@ -360,7 +379,10 @@ public class PlatformerCharacter2D : MonoBehaviour
         if (cur_obj != null)
             cur_obj.GetComponent<Rigidbody2D>().isKinematic = false;
 
-        this.m_AirControl = true;
+        if (!m_Grounded)
+            forced_air_control = true;  // Keep all momentum gotten from swinging
+        else
+            this.m_AirControl = true;   // Let us move precisely
     }
 
 
@@ -411,7 +433,11 @@ public class PlatformerCharacter2D : MonoBehaviour
                 Flip();
             }
         }
-
+        else if (forced_air_control)    // Player can adjust speed in midair by using forces
+        {
+            Debug.Log("forced");
+            m_Rigidbody2D.AddForce(new Vector2(horizontal_input * forced_air_control_movement_speed, 0));
+        }
 
         // If the player should jump...
         if (jump && stamina >= jump_stamina_cost && cur_jump_delay <= 0)

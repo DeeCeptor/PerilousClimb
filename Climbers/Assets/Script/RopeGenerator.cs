@@ -142,7 +142,6 @@ public class RopeGenerator : MonoBehaviour
         // vertexCount = (((int)Vector2.Distance(beginning.transform.position, end.transform.position)) * 3) - 1;
 
         line.SetWidth(0.1f, 0.1f);  // 0.05f
-        line.SetColors(Color.black, Color.blue);
         Vector3 dir = beginning_anchor.transform.position - end_anchor.transform.position;
 
         for (int i = 0; i < vertexCount; i++)

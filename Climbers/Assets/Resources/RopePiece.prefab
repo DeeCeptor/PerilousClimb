@@ -28,7 +28,7 @@ GameObject:
   - 50: {fileID: 5022606}
   - 58: {fileID: 5823208}
   - 233: {fileID: 23361760}
-  - 114: {fileID: 11467820}
+  - 114: {fileID: 11431108}
   m_Layer: 9
   m_Name: RopePiece
   m_TagString: Untagged
@@ -106,7 +106,7 @@ CircleCollider2D:
   m_Offset: {x: 0, y: 0}
   serializedVersion: 2
   m_Radius: 0.01
---- !u!114 &11467820
+--- !u!114 &11431108
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
@@ -123,6 +123,7 @@ MonoBehaviour:
   position_from_bottom_in_rope: 0
   top_most: {fileID: 0}
   bottom_most: {fileID: 0}
+  all_segments: []
 --- !u!114 &11477994
 MonoBehaviour:
   m_ObjectHideFlags: 1

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -114,7 +115,7 @@ public class PlatformerCharacter2D : MonoBehaviour
             GameObject hook = (GameObject)Instantiate(Resources.Load("Hook2"), transform.position, transform.rotation);
             // Set its velocity to fly towards the mouse point
             hook.GetComponent<Rigidbody2D>().velocity = look_direction * 20f;
-            hook.GetComponent<HookToTerrain>().owner = this.gameObject;
+            hook.GetComponent<HookToTerrain>().thrower = this.gameObject;
         }
         // Destroy any rope the player is touching
         if (player.IsButtonPressed("B"))
@@ -123,6 +124,7 @@ public class PlatformerCharacter2D : MonoBehaviour
             {
                 GameObject.Destroy(rope_in_background.transform.parent.gameObject);
                 rope_in_background = null;
+                this.can_climb_rope = false;
                 if (this.connected_joint.enabled)
                     this.connected_joint.enabled = false;
             }
@@ -165,6 +167,9 @@ public class PlatformerCharacter2D : MonoBehaviour
                 Debug.Log("Took damage: " + damage + " " + velocity_over_threshold);
                 AdjustHP(damage);
             }
+
+            if (is_grappling)
+                this.DetachFromRope(false);
         }
 
         //m_Anim.SetBool("Ground", m_Grounded);
@@ -174,22 +179,22 @@ public class PlatformerCharacter2D : MonoBehaviour
         
 
         // Read the inputs.
-        bool climb = player.IsButtonCurrentlyDown("RightBumper");
+        bool is_climbing_button_down = player.IsButtonCurrentlyDown("RightBumper");
         float h = player.GetAxis("Horizontal");
         float v = player.GetAxis("Vertical");
 
-        if (climb)
+
+
+        if (is_climbing_button_down)
         {
             if (can_climb_rope && !is_climbing_rope)
-                this.StartClimbingRope();
+                this.AttachToRope();
             else
-                this.StartClimbing();
+                this.StartClimbing();   // Climbing ledges. No rope involved
         }
 
         if (m_Jump && is_climbing_rope)
-            this.StopClimbingRope();
-
-
+            this.DetachFromRope(true);
 
         // Change the way we interpret input if we're connected to a rope 
         if (connected_joint != null && false)
@@ -213,65 +218,154 @@ public class PlatformerCharacter2D : MonoBehaviour
 
         // Pass all parameters to the character control script
         if (is_climbing_rope)
-            MoveOnRope(h, v);
+        {
+            MoveOnRope(h, v);   // Move on a rope
+        }
+        else if (is_climbing)
+        {
+            MoveOnLedge(h, v, is_climbing_button_down, m_Jump);    // Move while climbing on ledges
+        }
         else
-            this.Move(h, v, climb, m_Jump);
+        {
+            Move(h, v, is_climbing_button_down, m_Jump);     // Move while walking on ground or in air
+        }
 
         m_Jump = false;
     }
 
 
-    public Transform current_segment;
-    public Transform above_segment;
-    public Transform below_segment;
+
     public Link rope_in_background;
-    float climbing_speed = 0.5f;
-    float distance_between_segments = 0;
+    GameObject cur_obj;
+    GameObject prev_obj = null;
+    int counter = 99;
+    float cur_distance;     // How far along the rope we are
+    float rope_climbing_speed = 0.03f;  // How quickly we move up and down while on a rope
+    int stuck_counter = 0;  // Are we stuck on the geometry for a while?
+    float max_hooking_distance = 8f;
+    public List<GameObject> rope_links;
+    SpringJoint2D spring;
+    public bool is_grappling = false;
 
     // Controls all movement on the rope
     public void MoveOnRope(float h, float v)
     {
-        // If at the next segment, find the next segment
-        if (distance_between_segments >= 1)
-        {
-            below_segment = current_segment;
-            current_segment = current_segment.GetComponent<Link>().above.transform;
-            above_segment = current_segment.GetComponent<Link>().above.transform;
-            distance_between_segments = 0;
-        }
-        else if (distance_between_segments <= -1)
-        {
-            above_segment = current_segment;
-            current_segment = current_segment.GetComponent<Link>().below.transform;
-            below_segment = current_segment.GetComponent<Link>().below.transform;
-            distance_between_segments = 0;
-        }
+        // Control the player via a springjoint where the visible rope simply follows the player
+        m_Rigidbody2D.AddForce(new Vector2(h * 100, 0));
 
-        // Keep track of how far between the two segments we are
-        distance_between_segments = Mathf.Clamp(distance_between_segments + v * climbing_speed, -1, 1);
+        cur_distance = Mathf.Clamp(cur_distance + (-v) * rope_climbing_speed, 0.005f, max_hooking_distance);
+        spring.distance = cur_distance;
 
-        if (distance_between_segments >= 0)
+        float dist = Vector2.Distance(this.transform.position, this.transform.position);
+        if (cur_distance + 0.2f < dist)
         {
-            this.transform.position = Vector2.Lerp(current_segment.transform.position, above_segment.transform.position, distance_between_segments);
+            stuck_counter++;
+
+            if (stuck_counter > 10)
+            {
+                // This means we're pulling against the terrain and are stuck. Give us an upward push to get over the ledge
+                //owner.GetComponent<Rigidbody2D>().AddForce(Vector2.up * 3000, ForceMode2D.Impulse);
+                this.AddJumpVelocity(false);
+                stuck_counter = 0;
+            }
         }
         else
         {
-            this.transform.position = Vector2.Lerp(current_segment.transform.position, below_segment.transform.position, Mathf.Abs(distance_between_segments));
+            stuck_counter = 0;
         }
-        this.transform.rotation = current_segment.transform.rotation;
 
-        // Swing rope left and right
-        if (h != 0)
+        if (!is_grappling)
         {
-            float force = h * swing_force * current_segment.GetComponent<Link>().position_from_bottom_in_rope * 0.2f;
-            Debug.Log(force);
-            current_segment.GetComponent<Rigidbody2D>().AddForce(new Vector2(force, 0), ForceMode2D.Force);
+            // If on a rope, have the closest segment of rope follow the player, to make the rope look taut
+            // Calculate how far down the rope we are
+            int cur_segment = Mathf.Clamp((int)(cur_distance * 5), 1, 39);
+            cur_obj = rope_links[cur_segment];
+
+            if (prev_obj != null && prev_obj != cur_obj)
+            {
+                //prev_obj.GetComponent<TargetJoint2D>().enabled = false;
+                prev_obj.GetComponent<Rigidbody2D>().isKinematic = false;
+            }
+            cur_obj.GetComponent<Rigidbody2D>().isKinematic = true;
+            cur_obj.GetComponent<Rigidbody2D>().velocity = m_Rigidbody2D.velocity;
+            //Debug.Log(owner.GetComponent<Rigidbody2D>().angularVelocity);
+            //cur_obj.transform.position = owner.transform.position;
+            counter++;
+
+            if (counter > 0)
+            {
+                cur_obj.transform.position = Vector3.Lerp(cur_obj.transform.position, this.transform.position, 0.5f);
+                //cur_obj.transform.position = owner.transform.position;
+                counter = 0;
+            }
+            prev_obj = cur_obj;
         }
     }
 
+    public void AttachToRope(Link rope_object)
+    {
+        rope_in_background = rope_object;
+        can_climb_rope = true;
+        AttachToRope();
+    }
+    public void AttachToRope()
+    {
+        if (rope_in_background != null && can_climb_rope)
+        {
+            if (is_climbing_rope)
+                DetachFromRope(false);
 
-    // Main method for resolving user input
-    public void Move(float horizontal_input, float vertical_input, bool climbing_button, bool jump)
+            is_climbing_rope = true;
+
+            rope_links = rope_in_background.GetComponent<Link>().all_segments;
+            // Get the total length of this rope
+            max_hooking_distance = rope_links.Count * rope_in_background.GetComponent<CircleCollider2D>().radius * 2;   // Radius is half a circle. We need the diameter
+            // Activate the springjoint on this object, and set the distance 
+            spring = rope_links[0].GetComponent<SpringJoint2D>();
+            spring.enabled = true;
+            spring.connectedBody = m_Rigidbody2D;
+            cur_distance = Vector2.Distance(this.transform.position, spring.gameObject.transform.position);
+            spring.distance = cur_distance;
+            this.m_AirControl = false;
+        }
+    }
+    public void AttachToGrapple(GameObject object_containing_sprintjoint, float max_distance)
+    {
+        if (is_climbing_rope)
+            DetachFromRope(false);
+
+        is_grappling = true;
+        is_climbing_rope = true;
+
+        max_hooking_distance = max_distance;
+        spring = object_containing_sprintjoint.GetComponent<SpringJoint2D>();
+        spring.enabled = true;
+        spring.connectedBody = m_Rigidbody2D;
+        cur_distance = Vector2.Distance(this.transform.position, spring.gameObject.transform.position);
+        spring.distance = cur_distance;
+        this.m_AirControl = false;
+    }
+    // Detaches player rope
+    public void DetachFromRope(bool add_jump)
+    {
+        is_climbing_rope = false;
+        is_grappling = false;
+        spring.enabled = false;
+
+        if (add_jump)
+            this.AddJumpVelocity(false);
+
+        if (prev_obj != null)
+            prev_obj.GetComponent<Rigidbody2D>().isKinematic = false;
+        if (cur_obj != null)
+            cur_obj.GetComponent<Rigidbody2D>().isKinematic = false;
+
+        this.m_AirControl = true;
+    }
+
+
+    // Character is climbing on a ledge, and not on a rope
+    void MoveOnLedge(float horizontal_input, float vertical_input, bool climbing_button, bool jump)
     {
         // Stop climbing if we let go of the button
         if (!climbing_button && is_climbing)
@@ -283,14 +377,14 @@ public class PlatformerCharacter2D : MonoBehaviour
             // Climbing sideways on wall
             m_Rigidbody2D.velocity = new Vector2(horizontal_input * climbing_max_speed, vertical_input * climbing_max_speed);
         }
-        /*
-        else if (connected_joint != null && vertical_input != 0)
-        {
-            // Move up or down
-            connected_joint.connectedAnchor = new Vector2(connected_joint.connectedAnchor.x, connected_joint.connectedAnchor.y + vertical_input / 100f);
-        }*/
-        // Are we walking?
-        else if (m_Grounded || m_AirControl)
+    }
+
+
+    // Main method for resolving user input while not on a rope
+    public void Move(float horizontal_input, float vertical_input, bool climbing_button, bool jump)
+    {
+        // Do we have control of our character? Yes if we're on the ground, and yes in the air if we have air control
+        if (m_Grounded || m_AirControl)
         {
             // Normal ground movement
             // Only control the player if grounded or airControl is turned on
@@ -393,37 +487,6 @@ public class PlatformerCharacter2D : MonoBehaviour
         this.m_Rigidbody2D.gravityScale = normal_gravity_factor;
     }
 
-    public void StartClimbingRope()
-    {
-        is_climbing_rope = true;
-
-        //this.GetComponent<Rigidbody2D>().isKinematic = true;
-        m_Rigidbody2D.gravityScale = 0;
-        m_Rigidbody2D.mass = 1;
-        m_Rigidbody2D.velocity = Vector2.zero;
-        current_segment = rope_in_background.transform;
-        above_segment = rope_in_background.above.transform;
-        below_segment = rope_in_background.below.transform;
-        this.transform.parent = current_segment.transform.parent;
-        // Add your velocity to the rope's velocity
-        current_segment.GetComponent<Rigidbody2D>().velocity = new Vector2(m_Rigidbody2D.velocity.x, current_segment.GetComponent<Rigidbody2D>().velocity.y);
-    }
-    public void StopClimbingRope()
-    {
-
-        if (is_climbing_rope && rope_in_background != null)
-        {
-            // Set our velocity to the velocity of the rope
-            m_Rigidbody2D.isKinematic = false;
-            m_Rigidbody2D.velocity = rope_in_background.GetComponent<Rigidbody2D>().velocity;
-            m_Rigidbody2D.gravityScale = normal_gravity_factor;
-            m_Rigidbody2D.mass = normal_mass;
-            this.AddJumpVelocity(false);
-            this.transform.rotation = Quaternion.identity;
-        }
-        is_climbing_rope = false;
-        //this.GetComponent<Rigidbody2D>().gravityScale = normal_gravity_factor;
-    }
 
     private void Flip()
     {

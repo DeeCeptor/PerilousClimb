@@ -27,7 +27,7 @@ Transform:
   m_GameObject: {fileID: 174794}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 4, y: 33, z: 0}
-  m_LocalScale: {x: 1, y: .5, z: 1}
+  m_LocalScale: {x: 1, y: 0.5, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -38,6 +38,7 @@ BoxCollider2D:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 174794}
   m_Enabled: 1
+  m_Density: 1
   m_Material: {fileID: 6200000, guid: 884b8afcca7dac644aa93d77ed28cddb, type: 2}
   m_IsTrigger: 0
   m_UsedByEffector: 1
@@ -55,7 +56,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a61c0563ab939b7469615f6cac3a3aa3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cell_size: 1
+  cell_size: 0.5
 --- !u!212 &21212126
 SpriteRenderer:
   m_ObjectHideFlags: 1
@@ -77,13 +78,15 @@ SpriteRenderer:
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
   m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: .5
+  m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_Sprite: {fileID: 21300000, guid: bcddc82bb4b8a2849a17edfae588b506, type: 3}
-  m_Color: {r: .365517139, g: 0, b: 1, a: 1}
+  m_Color: {r: 0.36551714, g: 0, b: 1, a: 1}
+  m_FlipX: 0
+  m_FlipY: 0
 --- !u!251 &25108914
 PlatformEffector2D:
   m_ObjectHideFlags: 1
@@ -96,6 +99,7 @@ PlatformEffector2D:
     serializedVersion: 2
     m_Bits: 4294967295
   m_UseOneWay: 1
+  m_UseOneWayGrouping: 0
   m_SurfaceArc: 180
   m_UseSideFriction: 0
   m_UseSideBounce: 0

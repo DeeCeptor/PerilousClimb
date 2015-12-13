@@ -38,18 +38,19 @@ PolygonCollider2D:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 101232}
   m_Enabled: 1
-  m_Material: {fileID: 6200000, guid: 884b8afcca7dac644aa93d77ed28cddb, type: 2}
+  m_Density: 1
+  m_Material: {fileID: 6200000, guid: 0cb77231a430b454fb792ff7ffcc3943, type: 2}
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_Offset: {x: 0, y: 0}
   m_Points:
     m_Paths:
-    - - {x: .316464186, y: .396611094}
-      - {x: -.422730088, y: -.368702173}
-      - {x: -.492615104, y: -.468126774}
-      - {x: -.5, y: -.5}
-      - {x: .5, y: -.5}
-      - {x: .5, y: .5}
+    - - {x: 0.3164642, y: 0.3966111}
+      - {x: -0.4227301, y: -0.36870217}
+      - {x: -0.4926151, y: -0.46812677}
+      - {x: -0.5, y: -0.5}
+      - {x: 0.5, y: -0.5}
+      - {x: 0.5, y: 0.5}
 --- !u!114 &11469830
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -94,13 +95,15 @@ SpriteRenderer:
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
   m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: .5
+  m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 2031070605
   m_SortingOrder: 0
   m_Sprite: {fileID: 21300016, guid: e002a88ff2efce94bbd72f921901b74c, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_FlipX: 0
+  m_FlipY: 0
 --- !u!1001 &100100000
 Prefab:
   m_ObjectHideFlags: 1
@@ -115,7 +118,7 @@ Prefab:
     - target: {fileID: 0}
       propertyPath: m_Material
       value: 
-      objectReference: {fileID: 6200000, guid: 884b8afcca7dac644aa93d77ed28cddb, type: 2}
+      objectReference: {fileID: 6200000, guid: 0cb77231a430b454fb792ff7ffcc3943, type: 2}
     - target: {fileID: 0}
       propertyPath: m_Layer
       value: 12

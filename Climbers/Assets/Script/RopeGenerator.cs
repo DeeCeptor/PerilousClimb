@@ -60,6 +60,7 @@ public class RopeGenerator : MonoBehaviour
             joints[x].GetComponent<Link>().bottom_most = joints[number_of_segments - 1];
             joints[x].GetComponent<Link>().position_from_top_in_rope = x;
             joints[x].GetComponent<Link>().position_from_bottom_in_rope = number_of_segments - x;
+            joints[x].GetComponent<Link>().all_segments = joints;
         }
 
         // Disable the hingejoint on the last rope semgnet
@@ -91,16 +92,26 @@ public class RopeGenerator : MonoBehaviour
         }
 
         // Make the start attachable to the terrain, like a grappling hook
-        joints[0].AddComponent<AttachToTerrain>();
+        AttachToTerrain terrain = joints[0].AddComponent<AttachToTerrain>();
+        terrain.thrower = thrower;
+        terrain.attach_to_thrower_if_in_range = true;
+        terrain.attach_range = joints[0].GetComponent<CircleCollider2D>().radius * 2 * joints.Count;
 
-        
+        // First segment always has a spring with which to attack the player to
+        SpringJoint2D spring = joints[0].AddComponent<SpringJoint2D>();
+        spring.dampingRatio = 0;
+        spring.frequency = 0;
+        spring.enabled = false;
+
         // Add a hook to the first segment
         //joints[0].AddComponent<HookToTerrain>();
         //joints[0].GetComponent<HookToTerrain>().owner = thrower;
+        /*
         GameObject hook = (GameObject)Instantiate(Resources.Load("Hook"), joints[0].transform.position, Quaternion.identity);
         hook.GetComponent<FollowObject>().object_to_follow = joints[0].transform;
         hook.GetComponent<HookRope>().owner = thrower;
         hook.GetComponent<HookRope>().rope_links = joints;
+        */
 
         // Add a force to the first rope segment
         joints[0].GetComponent<Rigidbody2D>().AddForce(throw_direction * throw_force);

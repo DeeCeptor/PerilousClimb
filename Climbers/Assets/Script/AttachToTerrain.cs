@@ -23,16 +23,22 @@ public class AttachToTerrain : MonoBehaviour
     {
         if (collision.gameObject.layer == LayerMask.NameToLayer("Terrain"))
         {
-            this.GetComponent<Rigidbody2D>().isKinematic = true;
-
-            if (attach_to_thrower_if_in_range
-                && thrower != null
-                && Vector2.Distance(thrower.transform.position, this.transform.position) <= attach_range)
-                AttachToThrower();
+            Attach();
         }
     }
 
+    // Attached to the terrain. Is now kinematic
+    void Attach()
+    {
+        this.GetComponent<Rigidbody2D>().isKinematic = true;
 
+        if (attach_to_thrower_if_in_range
+            && thrower != null
+            && Vector2.Distance(thrower.transform.position, this.transform.position) <= attach_range)
+            AttachToThrower();
+
+        Instantiate(Resources.Load("AttachmentTerrainParticles"), this.transform.position, Quaternion.identity);
+    }
     void AttachToThrower()
     {
         PlatformerCharacter2D player = thrower.GetComponent<PlatformerCharacter2D>();

@@ -11,6 +11,7 @@ public class Slope : MonoBehaviour
         if (other.gameObject.tag == "Player")
         {
             other.gameObject.GetComponent<Rigidbody2D>().gravityScale = 0f;
+            // RigidbodyConstraints2D.
         }
     }
 

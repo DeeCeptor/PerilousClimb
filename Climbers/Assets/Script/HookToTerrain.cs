@@ -43,6 +43,7 @@ public class HookToTerrain : MonoBehaviour
             if (thrower != null
                 && Vector2.Distance(thrower.transform.position, this.transform.position) <= attach_range)
             {
+                Instantiate(Resources.Load("AttachmentTerrainParticles"), this.transform.position, Quaternion.identity);
                 AttachToThrower();
             }
         }

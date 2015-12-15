@@ -8,7 +8,6 @@ public class PlatformerCharacter2D : MonoBehaviour
 {
     [SerializeField] private float m_MaxSpeed = 10f;                    // The fastest the player can travel in the x axis.
     [SerializeField] private float m_JumpForce = 400f;                  // Amount of force added when the player jumps.
-    [Range(0, 1)] [SerializeField] private float m_CrouchSpeed = .36f;  // Amount of maxSpeed applied to crouching movement. 1 = 100%
     [SerializeField] public bool m_AirControl = false;                 // Whether or not a player can steer while jumping;
     public float forced_air_control_movement_speed = 50f;
     [SerializeField] public bool forced_air_control = false;     // Does not change the player's velocity in midair, instead allowing the player to use forces to move
@@ -31,13 +30,14 @@ public class PlatformerCharacter2D : MonoBehaviour
 
     // Custom fields
     [SerializeField] private float climbing_max_speed = 2;
-    private float slope_friction = 0.6f;
     [HideInInspector] public float normal_gravity_factor;
     [HideInInspector] public float normal_mass;
     [HideInInspector] public bool can_climb = false;  // If over a climbable section, this is set to true
     [HideInInspector] public bool is_climbing = false;
     [HideInInspector] public bool can_climb_rope = false;
     [HideInInspector] public bool is_climbing_rope = false;
+    bool is_climbing_button_down = false;
+    SpriteRenderer aimer;   // Aims towards the mouse or the right stick of a controller
 
     [HideInInspector] public float HP = 1;
     [HideInInspector] public float stamina = 1;   // Stamina dictates if we can do stressful actions. Low stamina means no.
@@ -84,6 +84,11 @@ public class PlatformerCharacter2D : MonoBehaviour
     void Start()
     {
         PlayerInformation.player_information.players.Add(this);
+
+        // Spawn an aimer for this player
+        aimer = ((GameObject) Instantiate(Resources.Load("Aimer") as GameObject, this.transform.position, Quaternion.identity)).GetComponent<SpriteRenderer>();
+        aimer.GetComponent<FollowObject>().object_to_follow = this.transform;
+        aimer.enabled = false;
     }
 
 
@@ -91,9 +96,27 @@ public class PlatformerCharacter2D : MonoBehaviour
     {
         // Find where/if the player is aiming with the mouse or right joystick
         Vector2 look_direction = player.GetNormalizedAimingVector();
+        
+        // Show the aiming line if holding down a button
+        if ((!player.keyboard && look_direction != Vector2.zero)    // Controller
+            ||
+            (player.IsButtonCurrentlyDown("LeftTrigger")    // Keyboard
+            || player.IsButtonCurrentlyDown("RightTrigger")
+            || player.IsButtonCurrentlyDown("LeftBumper")))
+        {
+            // Rotate the aimer in the right direction
+            var angle = Mathf.Atan2(look_direction.y, look_direction.x) * Mathf.Rad2Deg;
+            aimer.transform.rotation = Quaternion.Euler(0, 0, angle);
+            aimer.enabled = true;
+        }
+        else
+            aimer.enabled = false;
+
 
         AdjustStamina(Time.deltaTime * stamina_regen_per_second);
         cur_jump_delay -= Time.deltaTime;
+
+        is_climbing_button_down = player.IsButtonCurrentlyDown("RightBumper");
 
         if (!m_Jump)
         {
@@ -102,7 +125,7 @@ public class PlatformerCharacter2D : MonoBehaviour
         }
 
         // Throw rope if clicking
-        if (player.IsButtonPressed("LeftTrigger"))   // Left click
+        if (player.IsButtonUp("LeftTrigger"))   // Left click
         {
             // Call throw rope on the rope generator
             GameObject rope_parent = (GameObject)Instantiate(Resources.Load("Rope"), transform.position, transform.rotation);
@@ -110,7 +133,7 @@ public class PlatformerCharacter2D : MonoBehaviour
             rope_parent.GetComponent<RopeGenerator>().Throw_Rope(this.transform.position, look_direction, rope_throw_force, null, this.gameObject);
         }
         // Throw rope that is tied around the player's waist
-        if (player.IsButtonPressed("LeftBumper"))   // Middle click
+        if (player.IsButtonUp("LeftBumper"))   // Middle click
         {
             // Call throw rope on the rope generator
             GameObject rope_parent = (GameObject)Instantiate(Resources.Load("Rope"), transform.position, transform.rotation);
@@ -118,10 +141,10 @@ public class PlatformerCharacter2D : MonoBehaviour
             rope_parent.GetComponent<RopeGenerator>().Throw_Rope(this.transform.position, look_direction, rope_throw_force, m_Rigidbody2D, this.gameObject);
         }
         // Throw grappling hook
-        if (player.IsButtonPressed("RightTrigger"))   // Right click
+        if (player.IsButtonUp("RightTrigger"))   // Right click
         {
             // Spawn a hook
-            GameObject hook = (GameObject)Instantiate(Resources.Load("Hook2"), transform.position, transform.rotation);
+            GameObject hook = (GameObject)Instantiate(Resources.Load("Hook"), transform.position, transform.rotation);
             // Set its velocity to fly towards the mouse point
             hook.GetComponent<Rigidbody2D>().velocity = look_direction * 20f;
             hook.GetComponent<HookToTerrain>().thrower = this.gameObject;
@@ -183,22 +206,20 @@ public class PlatformerCharacter2D : MonoBehaviour
             forced_air_control = false;
             m_AirControl = true;
         }
-        if (m_Grounded )
-            //|| (forced_air_control && (Mathf.Abs(m_Rigidbody2D.velocity.x) < m_MaxSpeed) && false))
+        if (m_Grounded 
+            || (forced_air_control && (m_Rigidbody2D.velocity.magnitude < m_MaxSpeed * 0.6f) && false))
         {
             forced_air_control = false;
             m_AirControl = true;
         }
 
-
         //m_Anim.SetBool("Ground", m_Grounded);
 
         // Set the vertical animation
         ////m_Anim.SetFloat("vSpeed", m_Rigidbody2D.velocity.y);
-        
 
-        // Read the inputs.
-        bool is_climbing_button_down = player.IsButtonCurrentlyDown("RightBumper");
+
+        // Read the inputs
         float h = player.GetAxis("Horizontal");
         float v = player.GetAxis("Vertical");
 
@@ -270,7 +291,7 @@ public class PlatformerCharacter2D : MonoBehaviour
     public void MoveOnRope(float h, float v)
     {
         // Control the player via a springjoint where the visible rope simply follows the player
-        m_Rigidbody2D.AddForce(new Vector2(h * 100, 0));
+        m_Rigidbody2D.AddForce(new Vector2(h * swing_force, 0));
 
         cur_distance = Mathf.Clamp(cur_distance + (-v) * rope_climbing_speed, 0.005f, max_hooking_distance);
         spring.distance = cur_distance;

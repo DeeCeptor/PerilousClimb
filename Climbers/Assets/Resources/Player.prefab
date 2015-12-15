@@ -60,7 +60,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 172996}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 7.35, y: 3.63, z: 0}
+  m_LocalPosition: {x: 10.3, y: 18.65, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 427288}
@@ -168,11 +168,14 @@ MonoBehaviour:
   m_JumpForce: 30000
   m_CrouchSpeed: 0.25
   m_AirControl: 1
+  forced_air_control_movement_speed: 100
+  forced_air_control: 0
+  on_ice: 0
   m_WhatIsGround:
     serializedVersion: 2
     m_Bits: 4294963401
   rope_throw_force: 1000
-  swing_force: 2
+  swing_force: 100
   climbing_max_speed: 2
   normal_gravity_factor: 0
   normal_mass: 0
@@ -189,10 +192,9 @@ MonoBehaviour:
   weight_slider: {fileID: 0}
   connected_joint: {fileID: 0}
   rope_follower: {fileID: 0}
-  current_segment: {fileID: 0}
-  above_segment: {fileID: 0}
-  below_segment: {fileID: 0}
   rope_in_background: {fileID: 0}
+  rope_links: []
+  is_grappling: 0
 --- !u!114 &11440606
 MonoBehaviour:
   m_ObjectHideFlags: 1

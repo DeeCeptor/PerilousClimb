@@ -17,8 +17,9 @@ public class RopeGenerator : MonoBehaviour
     public GameObject end_rope_piece;
 
     public Vector2 direction;// = new Vector2(1, 0);
-    int number_of_segments = 40;
 
+    public int number_of_segments = 40;
+    public float size_of_rope_pieces = 0.2f;
 
     void Awake()
     {
@@ -61,6 +62,7 @@ public class RopeGenerator : MonoBehaviour
             joints[x].GetComponent<Link>().position_from_top_in_rope = x;
             joints[x].GetComponent<Link>().position_from_bottom_in_rope = number_of_segments - x;
             joints[x].GetComponent<Link>().all_segments = joints;
+            joints[x].GetComponent<Link>().rope = this;
         }
 
         // Disable the hingejoint on the last rope semgnet
@@ -102,6 +104,20 @@ public class RopeGenerator : MonoBehaviour
         spring.dampingRatio = 0;
         spring.frequency = 0;
         spring.enabled = false;
+
+        // Name the segments
+        joints[0].name = "FirstPiece";
+        joints[joints.Count - 1].name = "EndPiece";
+
+        // Create attach points at the top and bottom of the rope
+        GameObject top = (GameObject) Instantiate(Resources.Load("RopeAttachPoint"), joints[0].transform.position, Quaternion.identity);
+        top.transform.parent = joints[0].transform;
+        GameObject bottom = (GameObject)Instantiate(Resources.Load("RopeAttachPoint"), joints[joints.Count - 1].transform.position, Quaternion.identity);
+        bottom.transform.parent = joints[joints.Count - 1].transform;
+
+        // Make the first segment able to attack to other ropes
+        top.AddComponent<RopeCombiner>();
+
 
         // Add a hook to the first segment
         //joints[0].AddComponent<HookToTerrain>();

@@ -62,8 +62,9 @@ public class PlatformerCharacter2D : MonoBehaviour
     float cur_jump_delay = 0;
 
     [HideInInspector]
-    public HingeJoint2D connected_joint;    // Joinbt that is used to connect a player to a rope
-    public GameObject rope_follower;
+    public HingeJoint2D connected_joint;    // Joint that is used to connect a player to a rope
+    public RopeGenerator attached_rope;
+
 
     private void Awake()
     {
@@ -318,7 +319,7 @@ public class PlatformerCharacter2D : MonoBehaviour
         {
             // If on a rope, have the closest segment of rope follow the player, to make the rope look taut
             // Calculate how far down the rope we are
-            int cur_segment = Mathf.Clamp((int)(cur_distance * 5), 1, 39);
+            int cur_segment = Mathf.Clamp((int)(cur_distance * 5), 1, attached_rope.number_of_segments - 1);
             cur_obj = rope_links[cur_segment];
 
             if (prev_obj != null && prev_obj != cur_obj)
@@ -346,6 +347,7 @@ public class PlatformerCharacter2D : MonoBehaviour
     {
         rope_in_background = rope_object;
         can_climb_rope = true;
+        attached_rope = rope_object.rope;
         AttachToRope();
     }
     public void AttachToRope()

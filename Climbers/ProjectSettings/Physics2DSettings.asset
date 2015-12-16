@@ -6,8 +6,8 @@ Physics2DSettings:
   serializedVersion: 2
   m_Gravity: {x: 0, y: -9.81}
   m_DefaultMaterial: {fileID: 6200000, guid: 884b8afcca7dac644aa93d77ed28cddb, type: 2}
-  m_VelocityIterations: 200
-  m_PositionIterations: 200
+  m_VelocityIterations: 100
+  m_PositionIterations: 100
   m_VelocityThreshold: 1
   m_MaxLinearCorrection: 0.2
   m_MaxAngularCorrection: 8
@@ -22,4 +22,4 @@ Physics2DSettings:
   m_QueriesHitTriggers: 1
   m_QueriesStartInColliders: 1
   m_ChangeStopsCallbacks: 0
-  m_LayerCollisionMatrix: fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffcfffffffcffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+  m_LayerCollisionMatrix: ffbfffffffbfffffffbfffffffffffffffbfffffffbfffffffffffffffffffffffbcffffffbcffffffbfffffffbfffffffbfffffffbfffffc8c0ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff

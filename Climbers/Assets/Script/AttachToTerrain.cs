@@ -38,6 +38,10 @@ public class AttachToTerrain : MonoBehaviour
             AttachToThrower();
 
         Instantiate(Resources.Load("AttachmentTerrainParticles"), this.transform.position, Quaternion.identity);
+
+        RopeCombiner rope_attacher = this.GetComponentInChildren<RopeCombiner>();
+        if (rope_attacher != null)
+            GameObject.Destroy(rope_attacher);
     }
     void AttachToThrower()
     {

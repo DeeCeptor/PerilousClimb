@@ -130,7 +130,7 @@ public class Player : MonoBehaviour
             return (Input.GetAxis(controls_prefix + trigger_name) > 0f);
         else
         {
-            Debug.Log("No such controller trigger " + trigger_name);
+            Debug.Log("No such controller trigger " + controls_prefix + trigger_name);
             return false;
         }
     }

@@ -265,7 +265,7 @@ public class PlatformerCharacter2D : MonoBehaviour
             cur_distance = Vector2.Distance(this.transform.position, spring.transform.position);
             // Attached to a rope. This gets complicated.
             // Walk left and right if on the ground
-            if (m_Grounded)
+            if (m_Grounded && v <= 0)
             {
                 if (cur_distance > max_hooking_distance)
                 {

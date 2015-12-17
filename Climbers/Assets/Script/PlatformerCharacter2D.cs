@@ -523,7 +523,14 @@ public class PlatformerCharacter2D : MonoBehaviour
     }
     public void Die()
     {
+        RespawnOnTimeScript.Respawner.playerDied(player.player_number);
+        gameObject.SetActive(false);
         Debug.Log("Player died");
+    }
+
+    public void Respawn()
+    {
+        gameObject.SetActive(true);
     }
 
     public void StartClimbing()

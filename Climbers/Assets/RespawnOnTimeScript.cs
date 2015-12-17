@@ -37,7 +37,7 @@ public class RespawnOnTimeScript : MonoBehaviour {
             {
                 playersToRespawn[i] = false;
                 players[i].transform.position = transform.position;
-                //players[i].Respawn();
+                players[i].Respawn();
             }
         }
 	}

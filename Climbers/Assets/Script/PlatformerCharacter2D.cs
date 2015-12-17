@@ -85,7 +85,10 @@ public class PlatformerCharacter2D : MonoBehaviour
     void Start()
     {
         PlayerInformation.player_information.players.Add(this);
-        RespawnOnTimeScript.Respawner.playerJoined();
+        if (RespawnOnTimeScript.Respawner!=null)
+        {
+            RespawnOnTimeScript.Respawner.playerJoined();
+        }
 
         // Spawn an aimer for this player
         aimer = ((GameObject) Instantiate(Resources.Load("Aimer") as GameObject, this.transform.position, Quaternion.identity)).GetComponent<SpriteRenderer>();
@@ -553,7 +556,10 @@ public class PlatformerCharacter2D : MonoBehaviour
     }
     public void Die()
     {
-        RespawnOnTimeScript.Respawner.playerDied(player.player_number);
+        if (RespawnOnTimeScript.Respawner != null)
+        {
+            RespawnOnTimeScript.Respawner.playerDied(player.player_number);
+        }
         gameObject.SetActive(false);
         Debug.Log("Player died");
     }

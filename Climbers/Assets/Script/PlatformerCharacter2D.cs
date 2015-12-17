@@ -85,6 +85,7 @@ public class PlatformerCharacter2D : MonoBehaviour
     void Start()
     {
         PlayerInformation.player_information.players.Add(this);
+        RespawnOnTimeScript.Respawner.playerJoined();
 
         // Spawn an aimer for this player
         aimer = ((GameObject) Instantiate(Resources.Load("Aimer") as GameObject, this.transform.position, Quaternion.identity)).GetComponent<SpriteRenderer>();

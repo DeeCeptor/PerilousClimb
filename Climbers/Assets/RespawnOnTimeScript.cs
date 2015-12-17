@@ -28,6 +28,22 @@ public class RespawnOnTimeScript : MonoBehaviour {
             players[i] = info.players[i];
         }
     }
+
+    public void playerJoined()
+    {
+        playersToRespawn = new bool[info.players.Count];
+        for (int i = 0; i < playersToRespawn.Length; i++)
+        {
+            playersToRespawn[i] = false;
+        }
+        respawnTimers = new float[info.players.Count];
+        players = new PlatformerCharacter2D[info.players.Count];
+
+        for (int i = 0; i < players.Length; i++)
+        {
+            players[i] = info.players[i];
+        }
+    }
 	
 	// Update is called once per frame
 	void FixedUpdate () {

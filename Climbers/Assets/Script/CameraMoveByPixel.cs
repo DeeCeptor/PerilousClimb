@@ -5,6 +5,7 @@ public class CameraMoveByPixel : MonoBehaviour
 {
     public Vector2 camera_offset;   // Applied if we are playing by ourselves
     private Camera this_camera;
+    public float size = 10f;
     private float starting_z;
 
 
@@ -27,7 +28,7 @@ public class CameraMoveByPixel : MonoBehaviour
 
 
         //Camera.main.orthographicSize = Screen.width / (((Screen.width / Screen.height) * 2) * 16);
-        Camera.main.orthographicSize = Screen.height / (2 * 16);
+        Camera.main.orthographicSize = size;
         //    x / (((x / y) * 2) * s)
         //Camera Size = y / (2 * s)
     }

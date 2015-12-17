@@ -7,13 +7,6 @@ public class SpikeScript : MonoBehaviour {
     public float damage = 1f;
     public int playerLayer = 8;
 
-	// Use this for initialization
-	void Start () {
-	}
-
-    void Update()
-    {
-    }
 	
 	void OnTriggerEnter2D(Collider2D collision)
     {

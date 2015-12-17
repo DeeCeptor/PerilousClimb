@@ -5,49 +5,47 @@ using System.Collections.Generic;
 public class RespawnOnTimeScript : MonoBehaviour {
     public static RespawnOnTimeScript Respawner;
     private PlayerInformation info;
-    public PlatformerCharacter2D[] players;
+    public List<PlatformerCharacter2D> players;
     //array of whether any given player is awaiting respawn
-    public bool[] playersToRespawn;
+    public List<bool> playersToRespawn;
     //array of timer for respawns
     public float respawnTime = 2f;
-    public float[] respawnTimers;
+    public List<float> respawnTimers;
 	// Use this for initialization
 	void Start () {
         Respawner = this;
         info = PlayerInformation.player_information;
-        playersToRespawn = new bool[info.players.Count];
-        for (int i = 0; i < playersToRespawn.Length; i++)
+        playersToRespawn = new List<bool>();
+        for (int i = 0; i < info.players.Count; i++)
         {
-            playersToRespawn[i] = false;
+            playersToRespawn.Add(false);
         }
-        respawnTimers = new float[info.players.Count];
-        players = new PlatformerCharacter2D[info.players.Count];
+        respawnTimers = new List<float>();
 
-        for (int i = 0; i < players.Length; i++)
+        for (int i = 0; i < info.players.Count; i++)
         {
-            players[i] = info.players[i];
+            respawnTimers.Add(0);
+        }
+
+        players = new List<PlatformerCharacter2D>();
+        for (int i = 0; i < info.players.Count; i++)
+        {
+            players.Add(info.players[i]);
         }
     }
 
     public void playerJoined()
     {
-        playersToRespawn = new bool[info.players.Count];
-        for (int i = 0; i < playersToRespawn.Length; i++)
-        {
-            playersToRespawn[i] = false;
-        }
-        respawnTimers = new float[info.players.Count];
-        players = new PlatformerCharacter2D[info.players.Count];
-
-        for (int i = 0; i < players.Length; i++)
-        {
-            players[i] = info.players[i];
-        }
+        playersToRespawn.Add(false);
+        
+        respawnTimers.Add(0);
+        players.Add(info.players[info.players.Count-1]);
+        
     }
 	
 	// Update is called once per frame
 	void FixedUpdate () {
-	    for(int i = 0;i < playersToRespawn.Length;i++)
+	    for(int i = 0;i < playersToRespawn.Count;i++)
         {
             if(playersToRespawn[i] && respawnTimers[i]<Time.time)
             {

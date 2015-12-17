@@ -173,7 +173,7 @@ MonoBehaviour:
   on_ice: 0
   m_WhatIsGround:
     serializedVersion: 2
-    m_Bits: 4294963401
+    m_Bits: 4294947017
   rope_throw_force: 250
   swing_force: 100
   climbing_max_speed: 2

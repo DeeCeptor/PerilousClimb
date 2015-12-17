@@ -19,7 +19,7 @@ public class GridSnap : MonoBehaviour
     void Update()
     {
         if (this.transform.parent == null
-            || (this.transform.parent.name == "Terrain"))
+            || (this.transform.parent.name == "Terrain" || this.transform.parent.name == "Foreground"))
         {
             x = Mathf.Round(transform.position.x / cell_size) * cell_size;
             y = Mathf.Round(transform.position.y / cell_size) * cell_size;

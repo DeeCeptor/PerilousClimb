@@ -20,6 +20,8 @@ public class RopeGenerator : MonoBehaviour
 
     public int number_of_segments = 40;
     public float size_of_rope_pieces = 0.2f;
+    public List<PlatformerCharacter2D> players_on_rope = new List<PlatformerCharacter2D>();
+
 
     void Awake()
     {
@@ -115,33 +117,30 @@ public class RopeGenerator : MonoBehaviour
         GameObject bottom = (GameObject)Instantiate(Resources.Load("RopeAttachPoint"), joints[joints.Count - 1].transform.position, Quaternion.identity);
         bottom.transform.parent = joints[joints.Count - 1].transform;
 
-        // Make the first segment able to attack to other ropes
+        // Make the first segment able to attach to other ropes
         top.AddComponent<RopeCombiner>();
 
-
-        // Add a hook to the first segment
-        //joints[0].AddComponent<HookToTerrain>();
-        //joints[0].GetComponent<HookToTerrain>().owner = thrower;
-        /*
-        GameObject hook = (GameObject)Instantiate(Resources.Load("Hook"), joints[0].transform.position, Quaternion.identity);
-        hook.GetComponent<FollowObject>().object_to_follow = joints[0].transform;
-        hook.GetComponent<HookRope>().owner = thrower;
-        hook.GetComponent<HookRope>().rope_links = joints;
-        */
-
         // Add a force to the first rope segment
-        joints[0].GetComponent<Rigidbody2D>().AddForce(throw_direction * throw_force);
-        joints[1].GetComponent<Rigidbody2D>().AddForce(throw_direction * (throw_force * 0.5f));
-        joints[2].GetComponent<Rigidbody2D>().AddForce(throw_direction * (throw_force * 0.4f));
-        joints[3].GetComponent<Rigidbody2D>().AddForce(throw_direction * (throw_force * 0.3f));
-        joints[4].GetComponent<Rigidbody2D>().AddForce(throw_direction * (throw_force * 0.2f));
-        joints[5].GetComponent<Rigidbody2D>().AddForce(throw_direction * (throw_force * 0.1f));
-        joints[6].GetComponent<Rigidbody2D>().AddForce(throw_direction * (throw_force * 0.1f));
-        joints[7].GetComponent<Rigidbody2D>().AddForce(throw_direction * (throw_force * 0.1f));
-        joints[8].GetComponent<Rigidbody2D>().AddForce(throw_direction * (throw_force * 0.1f));
-        joints[9].GetComponent<Rigidbody2D>().AddForce(throw_direction * (throw_force * 0.1f));
+        
+        for (int z = 0; z < joints.Count; z++)
+        {
+            Vector2 force_to_add = throw_direction * throw_force * (1f - (float) ((float)(z) / (float)joints.Count));
+            joints[z].GetComponent<Rigidbody2D>().AddForce(force_to_add);
+        }
 
-        //joints[2].GetComponent<Rigidbody2D>().AddForce(throw_direction * (throw_force * 0.2f));
+        /*
+joints[0].GetComponent<Rigidbody2D>().AddForce(throw_direction * throw_force);
+joints[1].GetComponent<Rigidbody2D>().AddForce(throw_direction * (throw_force * 0.5f));
+joints[2].GetComponent<Rigidbody2D>().AddForce(throw_direction * (throw_force * 0.4f));
+joints[3].GetComponent<Rigidbody2D>().AddForce(throw_direction * (throw_force * 0.3f));
+joints[4].GetComponent<Rigidbody2D>().AddForce(throw_direction * (throw_force * 0.2f));
+joints[5].GetComponent<Rigidbody2D>().AddForce(throw_direction * (throw_force * 0.1f));
+joints[6].GetComponent<Rigidbody2D>().AddForce(throw_direction * (throw_force * 0.1f));
+joints[7].GetComponent<Rigidbody2D>().AddForce(throw_direction * (throw_force * 0.1f));
+joints[8].GetComponent<Rigidbody2D>().AddForce(throw_direction * (throw_force * 0.1f));
+joints[9].GetComponent<Rigidbody2D>().AddForce(throw_direction * (throw_force * 0.1f));*/
+        // Add rope to dictionary of ropes
+        ObjectManager.object_manager.AddRope(this.gameObject);
     }
 
 

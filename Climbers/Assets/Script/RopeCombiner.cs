@@ -24,7 +24,7 @@ public class RopeCombiner : MonoBehaviour
         {
             Debug.Log("Connecting ropes");
             other.gameObject.name = "RopePiece";
-            this_link.GetComponent<AttachToTerrain>().enabled = false;
+            GameObject.Destroy(this_link.GetComponent<AttachToTerrain>());
 
             // Connect this rope to the rope that collided with us
             Link other_link = other.GetComponentInParent<Link>();
@@ -61,9 +61,13 @@ public class RopeCombiner : MonoBehaviour
 
             new_rope.number_of_segments = new_all_links.Count;
 
-            GameObject.Destroy(this_rope.gameObject);
-            GameObject.Destroy(this.gameObject);
+            // Remove this from the rope list, add the combined rope again to the rope list
+            ObjectManager.object_manager.RemoveRope(this_rope.gameObject);
+            ObjectManager.object_manager.AddRope(new_rope.gameObject);
+
+            //GameObject.Destroy(other_link.top_most.GetComponentInChildren<RopeCombiner>().gameObject);
             GameObject.Destroy(other.gameObject);
+            GameObject.Destroy(this.gameObject);
         }
     }
 }

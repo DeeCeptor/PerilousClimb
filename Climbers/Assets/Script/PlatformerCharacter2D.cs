@@ -131,7 +131,7 @@ public class PlatformerCharacter2D : MonoBehaviour
             // Call throw rope on the rope generator
             GameObject rope_parent = (GameObject)Instantiate(Resources.Load("Rope"), transform.position, transform.rotation);
             // 3000 on 1 mass ropes
-            rope_parent.GetComponent<RopeGenerator>().Throw_Rope(this.transform.position, look_direction, rope_throw_force, null, this.gameObject);
+            rope_parent.GetComponent<RopeGenerator>().Throw_Rope(m_CeilingCheck.transform.position, look_direction, rope_throw_force, null, this.gameObject);
         }
         // Throw rope that is tied around the player's waist
         if (player.IsButtonUp("LeftBumper"))   // Middle click
@@ -357,6 +357,8 @@ public class PlatformerCharacter2D : MonoBehaviour
             if (is_climbing_rope)
                 DetachFromRope(false);
 
+            attached_rope = rope_in_background.rope;
+            attached_rope.players_on_rope.Add(this);
             is_climbing_rope = true;
 
             rope_links = rope_in_background.GetComponent<Link>().all_segments;
@@ -390,6 +392,8 @@ public class PlatformerCharacter2D : MonoBehaviour
     // Detaches player rope
     public void DetachFromRope(bool add_jump)
     {
+        attached_rope.players_on_rope.Remove(this);
+
         is_climbing_rope = false;
         is_grappling = false;
         spring.enabled = false;

@@ -8,8 +8,13 @@ public class CameraMoveByPixel : MonoBehaviour
     public float size = 10f;
     private float starting_z;
 
+    public float orthoSize = 32f; // Check your sprite's in the inspector. This should be double the "Pixels Per Unit"
+    private float lastPixelWidth = 0f;
+    private float lastPixelHeight = 0f;
+    private float lastOrtho;
 
-	void Start ()
+
+    void Start ()
     {
         this_camera = this.GetComponent<Camera>();
         starting_z = this.transform.position.z;
@@ -29,6 +34,7 @@ public class CameraMoveByPixel : MonoBehaviour
 
         //Camera.main.orthographicSize = Screen.width / (((Screen.width / Screen.height) * 2) * 16);
         Camera.main.orthographicSize = size;
+        Camera.main.orthographicSize = Screen.height * this_camera.rect.height / 16 / 2.0f;//- 0.1f;
         //    x / (((x / y) * 2) * s)
         //Camera Size = y / (2 * s)
     }
@@ -36,6 +42,20 @@ public class CameraMoveByPixel : MonoBehaviour
 
     void LateUpdate ()
     {
+        // Adjust orthographic size if screen has changed size
+        if (this_camera.orthographicSize != Screen.height / orthoSize ||
+             lastPixelWidth != this_camera.pixelWidth ||
+             lastPixelHeight != this_camera.pixelHeight)
+        {
+            float new_size = Screen.height / orthoSize;
+            Debug.Log("Changing screen resolution from " + this_camera.orthographicSize + " to " + new_size + ", " + Screen.height + "/" + orthoSize);
+            this_camera.orthographicSize = new_size;
+            lastPixelWidth = this_camera.pixelWidth;
+            lastPixelHeight = this_camera.pixelHeight;
+            //this_camera.rect = new Rect(0, 0, 2000, this_camera.rect.height);
+        }
+
+
         int num_players = 0;
         Vector2 averaged_player_position = Vector2.zero;
         // Calculate the average position to follow
@@ -47,9 +67,11 @@ public class CameraMoveByPixel : MonoBehaviour
         averaged_player_position += camera_offset;
         averaged_player_position = averaged_player_position / num_players;
 
+        /*
         this.transform.position = new Vector3(RoundToNearestPixel(averaged_player_position.x, this_camera),
                                               RoundToNearestPixel(averaged_player_position.y, this_camera),
-                                              starting_z);
+                                              starting_z);*/
+        this.transform.position = new Vector3(averaged_player_position.x, averaged_player_position.y, starting_z);
 	}
 
 

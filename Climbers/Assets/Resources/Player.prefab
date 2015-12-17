@@ -8,6 +8,7 @@ GameObject:
   serializedVersion: 4
   m_Component:
   - 4: {fileID: 427288}
+  - 114: {fileID: 11449264}
   m_Layer: 8
   m_Name: GroundCheck
   m_TagString: Untagged
@@ -60,7 +61,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 172996}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 10.3, y: 18.65, z: 0}
+  m_LocalPosition: {x: 10.56, y: 18.31, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 427288}
@@ -133,9 +134,9 @@ BoxCollider2D:
   m_Material: {fileID: 6200000, guid: 884b8afcca7dac644aa93d77ed28cddb, type: 2}
   m_IsTrigger: 0
   m_UsedByEffector: 0
-  m_Offset: {x: 0, y: -0.105405316}
+  m_Offset: {x: 0, y: -0.10658455}
   serializedVersion: 2
-  m_Size: {x: 0.18939617, y: 0.46918923}
+  m_Size: {x: 0.18939617, y: 0.46764123}
 --- !u!95 &9522482
 Animator:
   serializedVersion: 3
@@ -166,15 +167,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_MaxSpeed: 4
   m_JumpForce: 30000
-  m_CrouchSpeed: 0.25
   m_AirControl: 1
-  forced_air_control_movement_speed: 100
+  forced_air_control_movement_speed: 500
   forced_air_control: 0
   on_ice: 0
   m_WhatIsGround:
     serializedVersion: 2
     m_Bits: 4294963401
-  rope_throw_force: 1000
+  rope_throw_force: 250
   swing_force: 100
   climbing_max_speed: 2
   normal_gravity_factor: 0
@@ -191,7 +191,7 @@ MonoBehaviour:
   stamina_slider: {fileID: 0}
   weight_slider: {fileID: 0}
   connected_joint: {fileID: 0}
-  rope_follower: {fileID: 0}
+  attached_rope: {fileID: 0}
   rope_in_background: {fileID: 0}
   rope_links: []
   is_grappling: 0
@@ -206,6 +206,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4ac035eb7c3f1742a9717512b591171, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &11449264
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 118932}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 23101c16f0828924e971f6228463129d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  all_ropes: []
 --- !u!212 &21215440
 SpriteRenderer:
   m_ObjectHideFlags: 1
@@ -232,7 +244,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: -1145590715
   m_SortingOrder: 1
-  m_Sprite: {fileID: 21300000, guid: c9a350aed2bafb640833be673d2dfea9, type: 3}
+  m_Sprite: {fileID: 21300000, guid: cb39fb5b4a0726740a3fc8490fd0072a, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0

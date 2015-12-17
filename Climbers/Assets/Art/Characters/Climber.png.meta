@@ -1,11 +1,13 @@
 fileFormatVersion: 2
-guid: c9a350aed2bafb640833be673d2dfea9
-timeCreated: 1449111590
+guid: cb39fb5b4a0726740a3fc8490fd0072a
+timeCreated: 1450322735
 licenseType: Free
 TextureImporter:
   fileIDToRecycleName:
-    21300000: Climber (1)_0
-    21300002: Climber (1)_1
+    21300000: Climber_0
+    21300002: Climber_1
+    21300004: Climber_2
+    21300006: Climber_3
   serializedVersion: 2
   mipmaps:
     mipMapMode: 0
@@ -25,7 +27,7 @@ TextureImporter:
   grayScaleToAlpha: 0
   generateCubemap: 0
   cubemapConvolution: 0
-  cubemapConvolutionSteps: 8
+  cubemapConvolutionSteps: 7
   cubemapConvolutionExponent: 1.5
   seamlessCubemap: 0
   textureFormat: -3
@@ -52,7 +54,7 @@ TextureImporter:
   buildTargetSettings: []
   spriteSheet:
     sprites:
-    - name: Climber (1)_0
+    - name: Climber_0
       rect:
         serializedVersion: 2
         x: 0
@@ -63,10 +65,32 @@ TextureImporter:
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
-    - name: Climber (1)_1
+    - name: Climber_1
       rect:
         serializedVersion: 2
         x: 15
+        y: 0
+        width: 15
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - name: Climber_2
+      rect:
+        serializedVersion: 2
+        x: 30
+        y: 0
+        width: 15
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - name: Climber_3
+      rect:
+        serializedVersion: 2
+        x: 45
         y: 0
         width: 15
         height: 15

@@ -42,7 +42,6 @@ public class AttachToTerrain : MonoBehaviour
         RopeCombiner rope_attacher = this.transform.parent.GetComponentInChildren<RopeCombiner>();
         if (rope_attacher != null)
         {
-            Debug.Log("AS");
             GameObject.Destroy(rope_attacher.gameObject);
         }
     }

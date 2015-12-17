@@ -57,7 +57,7 @@ public class PlatformerCharacter2D : MonoBehaviour
     bool previously_grounded = false;
     Vector2 previous_velocity = Vector2.zero;
 
-    float fall_damage_threshold = -15f;     // Anything more (> -15) does no damage when falling
+    float fall_damage_threshold = -12f;     // Y velocity needed to be damaged upon falling
     float jump_delay = 0.2f;    // Can't jump again jump_Delay seconds after the last jump. Prevents weird super jumping.
     float cur_jump_delay = 0;
 
@@ -190,6 +190,7 @@ public class PlatformerCharacter2D : MonoBehaviour
         // -Y velocity means we're heading downwards
         if (!previously_grounded && m_Grounded && previous_velocity.y < 0)
         {
+            Debug.Log(previous_velocity.y);
             // An average jump will have you get ~-9 Y velocity
             // Deal damage if the value is over -15
             // Are we going fast enough to get hurt?
@@ -261,7 +262,31 @@ public class PlatformerCharacter2D : MonoBehaviour
         // Pass all parameters to the character control script
         if (is_climbing_rope)
         {
-            MoveOnRope(h, v);   // Move on a rope
+            cur_distance = Vector2.Distance(this.transform.position, spring.transform.position);
+            // Attached to a rope. This gets complicated.
+            // Walk left and right if on the ground
+            if (m_Grounded)
+            {
+                if (cur_distance > max_hooking_distance)
+                {
+                    // Detach from rope if we've walked too far away
+                    DetachFromRope(false);
+                    Debug.Log("player walked too far away from rope");
+                }
+                else
+                {
+                    spring.enabled = false;
+                    // Calculate how far away we are from the attach point
+                    Move(h, v, false, m_Jump);
+                    HaveNearestRopeFollowPlayer();
+                }
+            }
+            else
+            {
+                // In the air, use rope controls
+                spring.enabled = true;
+                MoveOnRope(h, v);   // Move on a rope
+            }
         }
         else if (is_climbing)
         {
@@ -316,6 +341,10 @@ public class PlatformerCharacter2D : MonoBehaviour
             stuck_counter = 0;
         }
 
+        HaveNearestRopeFollowPlayer();
+    }
+    public void HaveNearestRopeFollowPlayer()
+    {
         if (!is_grappling)
         {
             // If on a rope, have the closest segment of rope follow the player, to make the rope look taut
@@ -331,9 +360,9 @@ public class PlatformerCharacter2D : MonoBehaviour
             cur_obj.GetComponent<Rigidbody2D>().isKinematic = true;
             cur_obj.GetComponent<Rigidbody2D>().velocity = m_Rigidbody2D.velocity;
             //Debug.Log(owner.GetComponent<Rigidbody2D>().angularVelocity);
-            //cur_obj.transform.position = owner.transform.position;
-            counter++;
 
+            // Have the rope section that is following the player move to its position
+            counter++;
             if (counter > 0)
             {
                 cur_obj.transform.position = Vector3.Lerp(cur_obj.transform.position, this.transform.position, 0.5f);

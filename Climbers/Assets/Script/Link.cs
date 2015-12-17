@@ -13,5 +13,7 @@ public class Link : MonoBehaviour
     public GameObject top_most;     // Top of the rope
     public GameObject bottom_most;  // Bottom of the rope
 
-    public List<GameObject> all_segments; 
+    public List<GameObject> all_segments;
+
+    public RopeGenerator rope;
 }

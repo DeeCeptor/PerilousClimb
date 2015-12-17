@@ -26,7 +26,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 175514}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 12, y: 17, z: 0}
+  m_LocalPosition: {x: 14, y: 17, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -67,8 +67,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bf0594e6be4f6cd418d7807bc25796f9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  debris: {fileID: 0}
+  debris: {fileID: 197776, guid: 04dad06bf5fd2fb41a8dcc981eeff39b, type: 2}
   debrisNumber: 0
+  velocityThreshold: 5
+  playerLayer: 8
+  ropeLayer: 9
+  debrisVelocity: 1
+  debrisToSpawn: 4
 --- !u!212 &21209940
 SpriteRenderer:
   m_ObjectHideFlags: 1
